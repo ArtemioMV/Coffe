@@ -28,10 +28,29 @@ $args = [
     'items'         => $body['items']         ?? [],
 ];
 
-if ($rol === 'mesero') {
+$isStaffMesaOrder = $rol === 'mesero'
+    || ($rol === 'administrador' && (!empty($body['mesa_id']) || (($body['tipo_pedido'] ?? '') === 'mesa')));
+
+if ($isStaffMesaOrder) {
     $args['mesero_id'] = (int)$user['id'];
     $args['mesa_id']   = !empty($body['mesa_id']) ? (int)$body['mesa_id'] : null;
     $args['tipo_pedido'] = 'mesa';
+
+    if (!empty($body['usuario_id'])) {
+        $clienteId = (int)$body['usuario_id'];
+        $stmt = db()->prepare("
+            SELECT u.id
+            FROM usuarios u
+            INNER JOIN roles r ON r.id = u.rol_id
+            WHERE u.id = ? AND u.activo = 1 AND r.nombre = 'cliente'
+            LIMIT 1
+        ");
+        $stmt->execute([$clienteId]);
+        if (!$stmt->fetchColumn()) {
+            echo json_encode(['ok' => false, 'msg' => 'Cliente no válido']); exit;
+        }
+        $args['usuario_id'] = $clienteId;
+    }
 } else {
     $args['usuario_id'] = (int)$user['id'];
 }

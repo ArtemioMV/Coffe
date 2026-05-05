@@ -6,6 +6,13 @@ require_role(['mesero','administrador']);
 
 $grouped = get_productos_por_categoria(true);
 $mesas = db()->query("SELECT * FROM mesas ORDER BY CAST(numero AS UNSIGNED)")->fetchAll();
+$clientes = db()->query("
+  SELECT u.id, u.nombre, u.correo, u.telefono
+  FROM usuarios u
+  INNER JOIN roles r ON r.id = u.rol_id
+  WHERE r.nombre = 'cliente' AND u.activo = 1
+  ORDER BY u.nombre
+")->fetchAll();
 
 $panel_role='mesero'; $panel_active='nuevo';
 $page_title='Nuevo pedido'; $title='Nuevo pedido · UKUMARI';
@@ -55,6 +62,17 @@ require __DIR__ . '/../includes/panel_layout.php';
         </select>
       </div>
       <div class="mb-2">
+        <label class="form-label small">Cliente</label>
+        <select class="form-select" id="usuario_id">
+          <option value="">Público general</option>
+          <?php foreach ($clientes as $c): ?>
+            <option value="<?= (int)$c['id'] ?>">
+              <?= e($c['nombre']) ?><?= $c['telefono'] ? ' · ' . e($c['telefono']) : '' ?><?= $c['correo'] ? ' · ' . e($c['correo']) : '' ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="mb-2">
         <label class="form-label small">Observaciones</label>
         <textarea class="form-control" id="observaciones" rows="2"></textarea>
       </div>
@@ -99,7 +117,7 @@ function render() {
   for (const it of items.values()) {
     total += it.precio * it.qty;
     const row = document.createElement('div');
-    row.className = 'd-flex justify-content-between align-items-center py-2 border-bottom';
+    row.className = 'mesero-cart-row d-flex justify-content-between align-items-center py-2 border-bottom';
     row.innerHTML = `
       <div class="small flex-grow-1">
         <div class="fw-semibold">${it.nombre}</div>
@@ -126,10 +144,12 @@ document.getElementById('searchProd').addEventListener('input', e => {
 
 document.getElementById('enviarBtn').addEventListener('click', async () => {
   const mesa_id = document.getElementById('mesa_id').value;
+  const usuario_id = document.getElementById('usuario_id').value;
   if (!mesa_id) { Swal.fire('Falta mesa','Selecciona una mesa','warning'); return; }
   const payload = {
     _csrf: csrf,
     mesa_id: parseInt(mesa_id, 10),
+    usuario_id: usuario_id ? parseInt(usuario_id, 10) : null,
     tipo_pedido: 'mesa',
     observaciones: document.getElementById('observaciones').value || null,
     items: [...items.values()].map(i=>({ producto_id:i.id, cantidad:i.qty }))

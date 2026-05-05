@@ -163,7 +163,7 @@ function crear_pedido(array $args): array {
 
         $pdo->commit();
 
-        // Puntos: solo si el pedido lo hizo un cliente (no mesero)
+        // Puntos: solo si el pedido queda asociado a un cliente registrado.
         if ($usuario_id) {
             $ganados = (int) floor($total * PUNTOS_POR_SOL);
             if ($ganados > 0) {
