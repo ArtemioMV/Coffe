@@ -7,7 +7,7 @@ require_role(['mesero','administrador']);
 $grouped = get_productos_por_categoria(true);
 $mesas = db()->query("SELECT * FROM mesas ORDER BY CAST(numero AS UNSIGNED)")->fetchAll();
 $clientes = db()->query("
-  SELECT u.id, u.nombre, u.correo, u.telefono
+  SELECT u.id, SUBSTRING_INDEX(TRIM(u.nombre), ' ', 2) AS nombre, '' AS correo, '' AS telefono
   FROM usuarios u
   INNER JOIN roles r ON r.id = u.rol_id
   WHERE r.nombre = 'cliente' AND u.activo = 1
