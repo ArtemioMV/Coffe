@@ -132,19 +132,20 @@ function pedirPorWhatsApp(){
   Swal.fire({
     title:'Enviar pedido por WhatsApp',
     html: `
-      <div class="text-start">
+      <div class="wa-order-form text-start">
         <label class="form-label small">Tu nombre</label>
-        <input id="waName" class="swal2-input" placeholder="¿Cómo te llamas?" style="width:100%">
+        <input id="waName" class="form-control" placeholder="¿Cómo te llamas?">
         <label class="form-label small mt-2">Tipo de pedido</label>
-        <select id="waTipo" class="swal2-input" style="width:100%">
+        <select id="waTipo" class="form-select">
           <option value="recojo">Recojo en tienda</option>
           <option value="delivery">Delivery</option>
           <option value="mesa">Para mesa</option>
         </select>
         <label class="form-label small mt-2">Notas adicionales (opcional)</label>
-        <input id="waNotas" class="swal2-input" placeholder="Dirección, hora aproximada…" style="width:100%">
+        <input id="waNotas" class="form-control" placeholder="Dirección, hora aproximada…">
       </div>
     `,
+    customClass: { popup: 'wa-order-popup' },
     confirmButtonText: 'Abrir WhatsApp',
     confirmButtonColor: '#25D366',
     showCancelButton: true,

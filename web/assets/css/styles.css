@@ -647,6 +647,38 @@ a:hover{ color:var(--uku-gold-dark); }
 }
 .btn-wa:hover{ background:#1ebe5a; color:#fff; transform:translateY(-1px); }
 .btn-wa:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+.wa-order-popup{
+  width:min(560px, calc(100vw - 2rem)) !important;
+  padding:1.4rem !important;
+  overflow:hidden !important;
+}
+.wa-order-popup .swal2-title{
+  font-size:clamp(1.7rem, 5vw, 2.45rem);
+  line-height:1.12;
+  padding:0 .5rem;
+}
+.wa-order-popup .swal2-html-container{
+  margin:1rem 0 0;
+  overflow:visible !important;
+}
+.wa-order-popup .swal2-actions{
+  gap:.7rem;
+  flex-wrap:wrap;
+}
+.wa-order-form{
+  display:grid;
+  gap:.45rem;
+}
+.wa-order-form .form-control,
+.wa-order-form .form-select{
+  width:100%;
+  margin:0;
+  min-width:0;
+  font-size:1rem;
+  border:1px solid #d8d8d8;
+  border-radius:8px;
+  padding:.72rem .9rem;
+}
 
 /* ----------- Paneles internos ----------- */
 .panel-shell{
