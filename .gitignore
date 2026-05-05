@@ -1,0 +1,30 @@
+# Sistema operativo
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Datos locales / volúmenes Docker
+volumes/
+data/
+*.sqlite
+
+# Variables de entorno reales (mantener config.php para defaults Docker)
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.cache

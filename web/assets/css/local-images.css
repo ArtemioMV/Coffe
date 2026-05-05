@@ -1,0 +1,27 @@
+/* =========================================================
+   UKUMARI · Override de imágenes locales (ACTIVADO)
+   Estas reglas pisan a las URLs Unsplash de demo en styles.css
+   ========================================================= */
+
+.hero{
+  background:
+    linear-gradient(120deg, rgba(43,24,16,.78) 0%, rgba(43,24,16,.45) 60%, rgba(43,24,16,.15) 100%),
+    url('/assets/img/hero.jpg') center/cover no-repeat !important;
+}
+
+.uku-swiper .slide-1{ background-image:url('/assets/img/slide-1.jpg') !important; background-size:cover !important; background-position:center !important; }
+.uku-swiper .slide-2{ background-image:url('/assets/img/slide-2.jpg') !important; background-size:cover !important; background-position:center !important; }
+.uku-swiper .slide-3{ background-image:url('/assets/img/slide-3.jpg') !important; background-size:cover !important; background-position:center !important; }
+.uku-swiper .slide-4{ background-image:url('/assets/img/slide-4.jpg') !important; background-size:cover !important; background-position:center !important; }
+
+.auth-art{
+  background:
+    linear-gradient(140deg,rgba(43,24,16,.7),rgba(43,24,16,.3)),
+    url('/assets/img/auth.jpg') center/cover no-repeat !important;
+}
+
+.about-image{
+  background-image:url('/assets/img/nosotros.jpg') !important;
+  background-size:cover !important;
+  background-position:center !important;
+}

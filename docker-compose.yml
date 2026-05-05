@@ -1,0 +1,60 @@
+services:
+  web:
+    image: php:8.2-apache
+    container_name: ukumari_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/var/www/html
+    depends_on:
+      - mysql
+    command: >
+      bash -c "docker-php-ext-install pdo pdo_mysql mysqli &&
+              a2enmod rewrite &&
+              apache2-foreground"
+    environment:
+      DB_HOST: mysql
+      DB_NAME: ukumari_db
+      DB_USER: ukumari_user
+      DB_PASS: ukumari_pass
+    networks:
+      - ukumari_net
+
+  mysql:
+    image: mysql:8.0
+    container_name: ukumari_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: ukumari_db
+      MYSQL_USER: ukumari_user
+      MYSQL_PASSWORD: ukumari_pass
+    volumes:
+      - ukumari_mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3307:3306"
+    networks:
+      - ukumari_net
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ukumari_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root_pass
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - ukumari_net
+
+volumes:
+  ukumari_mysql_data:
+
+networks:
+  ukumari_net:
+    driver: bridge
