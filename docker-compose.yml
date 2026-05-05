@@ -3,7 +3,7 @@ services:
     image: php:8.2-apache
     container_name: ukumari_web
     ports:
-      - "8080:80"
+      - "${WEB_PORT:-8080}:80"
     volumes:
       - ./web:/var/www/html
     depends_on:
@@ -13,10 +13,19 @@ services:
               a2enmod rewrite &&
               apache2-foreground"
     environment:
-      DB_HOST: mysql
-      DB_NAME: ukumari_db
-      DB_USER: ukumari_user
-      DB_PASS: ukumari_pass
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_NAME: ${DB_NAME:-ukumari_db}
+      DB_USER: ${DB_USER:-ukumari_user}
+      DB_PASS: ${DB_PASS:-ukumari_pass}
+      APP_NAME: ${APP_NAME:-UKUMARI}
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Lima}
+      IGV_RATE: ${IGV_RATE:-0.18}
+      CURRENCY: ${CURRENCY:-S/}
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-51999000000}
+      WHATSAPP_DISPLAY: ${WHATSAPP_DISPLAY:-+51 999 000 000}
+      PUNTOS_POR_SOL: ${PUNTOS_POR_SOL:-1}
+      PUNTOS_CANJE_BLOQUE: ${PUNTOS_CANJE_BLOQUE:-100}
+      SOLES_POR_BLOQUE_CANJE: ${SOLES_POR_BLOQUE_CANJE:-5}
     networks:
       - ukumari_net
 
@@ -25,15 +34,15 @@ services:
     container_name: ukumari_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root_pass
-      MYSQL_DATABASE: ukumari_db
-      MYSQL_USER: ukumari_user
-      MYSQL_PASSWORD: ukumari_pass
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-root_pass}
+      MYSQL_DATABASE: ${DB_NAME:-ukumari_db}
+      MYSQL_USER: ${DB_USER:-ukumari_user}
+      MYSQL_PASSWORD: ${DB_PASS:-ukumari_pass}
     volumes:
       - ukumari_mysql_data:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "3307:3306"
+      - "${DB_PORT:-3307}:3306"
     networks:
       - ukumari_net
 
@@ -44,9 +53,9 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_USER: root
-      PMA_PASSWORD: root_pass
+      PMA_PASSWORD: ${DB_ROOT_PASS:-root_pass}
     ports:
-      - "8081:80"
+      - "${PMA_PORT:-8081}:80"
     depends_on:
       - mysql
     networks:

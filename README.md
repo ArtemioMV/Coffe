@@ -33,23 +33,29 @@ paneles internos para administrador, mesero y cocina/barra.
 
 ## Cómo levantar el proyecto
 
+> Guía completa paso a paso en **[INSTALL.md](INSTALL.md)**.
+
+Resumen rápido:
+
 ```bash
+git clone https://github.com/ArtemioMV/Coffe.git
+cd Coffe
+cp .env.example .env       # ajusta valores si lo deseas
 docker compose up -d
 ```
 
 | Servicio   | URL                      | Notas                                  |
 |------------|--------------------------|----------------------------------------|
 | Web        | http://localhost:8080    | Sitio público y paneles                |
-| phpMyAdmin | http://localhost:8081    | usuario root / `root_pass`             |
-| MySQL      | localhost:3307           | externo · ver credenciales abajo       |
+| phpMyAdmin | http://localhost:8081    | usuario `root` · contraseña del `.env` |
+| MySQL      | localhost:3307           | externo · credenciales en `.env`       |
 
-**Base de datos**
-- DB: `ukumari_db`
-- Usuario: `ukumari_user` / `ukumari_pass`
-- Root: `root_pass`
+**Configuración** — todas las variables sensibles (credenciales BD, puertos,
+WhatsApp, reglas de puntos) están en `.env`. Plantilla en `.env.example`.
 
-La base se inicializa automáticamente con `database/init.sql` (esquema + carta UKUMARI completa).
-Las contraseñas de los usuarios semilla se encriptan con `password_hash()` la primera vez que arranca PHP (no quedan en texto plano).
+**Base de datos** — se inicializa automáticamente con `database/init.sql`
+(esquema completo + 74 productos en 12 categorías). Las contraseñas semilla
+se encriptan con `password_hash()` la primera vez que arranca PHP.
 
 Para detener:
 ```bash

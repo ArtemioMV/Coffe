@@ -224,11 +224,10 @@ function cambiar_estado_pedido(int $pedido_id, int $nuevo_estado_id): void {
 }
 
 // =============== Sistema de puntos UKUMARI ===============
-// Reglas:
-//   1 sol gastado = 1 punto.  Canje: 100 puntos = S/ 5 de descuento.
-const PUNTOS_POR_SOL = 1;
-const PUNTOS_CANJE_BLOQUE = 100;
-const SOLES_POR_BLOQUE_CANJE = 5;
+// Reglas configurables vía .env (PUNTOS_POR_SOL, PUNTOS_CANJE_BLOQUE, SOLES_POR_BLOQUE_CANJE).
+defined('PUNTOS_POR_SOL')          || define('PUNTOS_POR_SOL',          (int) env_num('PUNTOS_POR_SOL', 1));
+defined('PUNTOS_CANJE_BLOQUE')     || define('PUNTOS_CANJE_BLOQUE',     (int) env_num('PUNTOS_CANJE_BLOQUE', 100));
+defined('SOLES_POR_BLOQUE_CANJE')  || define('SOLES_POR_BLOQUE_CANJE',  env_num('SOLES_POR_BLOQUE_CANJE', 5));
 
 function sumar_puntos(int $usuario_id, int $puntos, ?int $pedido_id = null, string $desc = ''): void {
     if ($puntos <= 0) return;
