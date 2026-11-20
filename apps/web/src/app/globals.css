@@ -63,7 +63,7 @@ small { font-size: .8rem; color: var(--muted); }
 .page-heading p { color: var(--muted); font-size: .9rem; margin: 0; }
 .surface { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
 /* Avisos y alertas refinadas: tarjetas limpias con acento lateral sin fondos pintados pesados */
-.info-banner, .table-banner, .error-banner {
+.info-banner, .table-banner {
   padding: .85rem 1.15rem;
   background: var(--paper);
   border: 1px solid var(--line);
@@ -90,10 +90,14 @@ small { font-size: .8rem; color: var(--muted); }
   color: var(--ink-secondary);
 }
 .error-banner {
-  border-left-color: var(--red);
-  color: var(--ink);
-  margin-bottom: 1rem;
+  margin: .4rem 0 .75rem;
+  color: var(--red);
+  font-size: .85rem;
+  line-height: 1.4;
 }
+.workspace-alert { display: flex; align-items: baseline; gap: .4rem; }
+.workspace-alert svg { align-self: center; flex: none; }
+.workspace-message { margin: .45rem 0; color: var(--muted); font-size: .85rem; }
 .empty-state { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .875rem; }
 .empty-state svg { display: block; margin: 0 auto .6rem; width: 28px; height: 28px; color: var(--muted); }
 .empty-state h2 { font-size: 1.05rem; color: var(--ink); margin-bottom: .25rem; }

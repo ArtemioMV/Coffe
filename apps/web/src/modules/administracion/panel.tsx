@@ -90,26 +90,14 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
   const [notices, setNotices] = useState<Notice[]>([]);
   const [showNotices, setShowNotices] = useState(false);
   const [connection, setConnection] = useState("Conectando…");
+  const [dataStatus, setDataStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [sound, setSound] = useState(false);
   const audio = useRef<AudioContext | null>(null);
   const known = useRef(new Set<string>());
-
-  const load = useCallback(async () => {
-    if (!user) return;
-    const withTables = ["ADMIN", "WAITER", "CASHIER"].includes(user.role);
-    // Las tres consultas van en paralelo; antes las mesas esperaban a pedidos y avisos.
-    const [orderData, noticeData, tableData] = await Promise.all([
-      api<{ orders: Order[] }>("orders"),
-      api<{ notifications: Notice[] }>("notifications"),
-      withTables ? api<{ tables: Table[] }>("tables") : Promise.resolve(null)
-    ]);
-    setOrders(orderData.orders);
-    setNotices(noticeData.notifications);
-    if (tableData) setTables(tableData.tables);
-  }, [user]);
+  const latestLoad = useRef(0);
 
   // Si la sesión vence o se cierra en otra pestaña, se vuelve al ingreso en lugar de mostrar un panel vacío.
   const fail = useCallback((e: unknown) => {
@@ -123,6 +111,28 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
     return false;
   }, []);
 
+  const load = useCallback(async () => {
+    if (!user) return;
+    const request = ++latestLoad.current;
+    const withTables = ["ADMIN", "WAITER", "CASHIER"].includes(user.role);
+    try {
+      const [orderData, noticeData, tableData] = await Promise.all([
+        api<{ orders: Order[] }>("orders"),
+        api<{ notifications: Notice[] }>("notifications"),
+        withTables ? api<{ tables: Table[] }>("tables") : Promise.resolve(null)
+      ]);
+      if (request !== latestLoad.current) return;
+      setOrders(orderData.orders);
+      setNotices(noticeData.notifications);
+      if (tableData) setTables(tableData.tables);
+      setDataStatus("ready");
+    } catch (e) {
+      if (request !== latestLoad.current) return;
+      if (sessionExpired(e)) fail(e);
+      else setDataStatus("unavailable");
+    }
+  }, [user, fail]);
+
   useEffect(() => {
     if (initialUser !== undefined) return;
     api<{ user: User | null }>("auth/me")
@@ -132,8 +142,9 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
   }, [initialUser]);
 
   useEffect(() => {
-    if (user) void load().catch(fail);
-  }, [user, load, refresh, fail]);
+    void load();
+    return () => { latestLoad.current += 1; };
+  }, [load]);
 
   useEffect(() => {
     if (!user) return;
@@ -171,12 +182,16 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
               else play();
             }
           }
-          void load().catch(() => setConnection("Sin conexión"));
+          void load();
         };
       })
-      .catch(fail);
+      .catch(e => {
+        if (!active) return;
+        if (sessionExpired(e)) fail(e);
+        else setConnection("Consulta periódica");
+      });
     const timer = setInterval(() => {
-      void load().catch(e => sessionExpired(e) ? fail(e) : setConnection("Sin conexión"));
+      void load();
     }, 15000);
     return () => {
       active = false;
@@ -187,16 +202,17 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
 
   function enter(next: User) {
     setUser(next);
+    setDataStatus("loading");
     setError("");
     window.dispatchEvent(new Event(SESSION_EVENT));
   }
 
-  const run: Run = async task => {
+  const run = async (task?: () => Promise<unknown>) => {
     if (busy) return;
     setBusy(true);
     setError("");
     try {
-      await task();
+      await task?.();
       setRefresh(v => v + 1);
       await load();
     } catch (e) {
@@ -295,12 +311,12 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
             <h1>{tabLabels[activeTab]}</h1>
             <span className="connection" aria-live="polite">
               <span style={{ width: "8px", height: "8px", display: "inline-block" }} />
-              {connection}
+              {dataStatus === "unavailable" ? "Datos sin actualizar" : connection}
             </span>
           </div>
 
           <div className="toolbar">
-            <Button variant="outline" aria-label="Actualizar" onClick={() => void run(load)} disabled={busy}>
+            <Button variant="outline" aria-label="Actualizar" onClick={() => void run()} disabled={busy}>
               <RefreshCw aria-hidden className={busy ? "animate-spin" : ""} />
               <span className="desktop-label">Actualizar</span>
             </Button>
@@ -331,7 +347,12 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
           </div>
         </div>
 
-        {error && <div role="alert" className="error-banner">{error}</div>}
+        {(error || dataStatus === "unavailable") && (
+          <p role="alert" className="error-banner workspace-alert">
+            <AlertTriangle size={15} aria-hidden />
+            {error || "No se pudo actualizar el panel. Pulsa Actualizar para reintentar."}
+          </p>
+        )}
 
         {showNotices && (
           <PanelNotices
@@ -341,7 +362,8 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
           />
         )}
 
-        {activeTab === "orders" && <OrdersView orders={orders} user={user} run={run} busy={busy} />}
+        {activeTab === "orders" && dataStatus === "loading" && <p className="workspace-message" role="status">Cargando pedidos…</p>}
+        {activeTab === "orders" && dataStatus === "ready" && <OrdersView orders={orders} user={user} run={run} busy={busy} />}
         {activeTab === "tables" && (
           <TablesView
             tables={tables}
@@ -587,18 +609,14 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
             ))}
           </select>
         </label>
-        <p>{visible.length} pedidos · Máximo 100 recientes</p>
+        {visible.length > 0 && <p>{visible.length} {visible.length === 1 ? "pedido" : "pedidos"}</p>}
       </div>
 
-      {!visible.length && (
-        <div className="surface empty-state">
-          <CookingPot size={28} aria-hidden />
-          <h2>Todo tranquilo por aquí</h2>
-          <p>Los nuevos pedidos aparecerán en este espacio en tiempo real.</p>
-        </div>
+      {visible.length ? (
+        <div className="orders-grid">{visible.map(renderOrder)}</div>
+      ) : (
+        <p className="workspace-message">No hay pedidos en esta vista.</p>
       )}
-
-      <div className="orders-grid">{visible.map(renderOrder)}</div>
     </>
   );
 }
