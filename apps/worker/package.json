@@ -1,0 +1,1 @@
+{ "name": "@restaurant/worker", "version": "0.1.0", "private": true, "dependencies": { "@restaurant/database": "*" } }

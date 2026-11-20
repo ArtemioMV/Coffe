@@ -1,215 +1,64 @@
-# UKUMARI · Café de especialidad
+# La Posada Cajamarquina
 
-Sitio web responsivo para la cafetería **UKUMARI**: carta digital pública,
-carrito con confirmación de pedido, sistema de puntos para clientes y
-paneles internos para administrador, mesero y cocina/barra.
+Sistema para un restaurante campestre de identidad cajamarquina. Incluye una web pública, carta, pedidos, atención de mesas, cocina y barra, caja, fidelización y atención al consumidor.
 
-> No es una SPA: es un sitio PHP + MySQL clásico, dockerizado, simple y funcional, con una estética cálida tipo coffee shop premium.
+La implementación inicial usa Next.js, React y TypeScript con API REST `/api/v1`, PostgreSQL con Prisma y un worker BullMQ.
 
----
+## Documentación
 
-## Stack
+| Documento | Contenido |
+|---|---|
+| [Requisitos](docs/REQUISITOS.md) | Alcance, roles, pedidos, pagos, reclamos, sugerencias, valoraciones y criterios de aceptación |
+| [Arquitectura](docs/ARQUITECTURA.md) | Stack, API REST, estructura de carpetas, red privada y operación |
+| [Desarrollo Next.js](docs/DESARROLLO.md) | Instalación nueva, variables, migraciones y alcance implementado |
+| [API REST](docs/API.md) | Endpoints, autenticación, estados e idempotencia |
+| [Notificaciones](docs/NOTIFICACIONES.md) | Eventos, destinatarios, avisos de cocina y meseros, reintentos y desconexiones |
+| [Datos](docs/DATOS.md) | Modelo conceptual PostgreSQL, Prisma, integridad y migraciones |
+| [Diseño](docs/DISENO.md) | Identidad campestre cajamarquina, tejidos, componentes y accesibilidad |
+| [Migraciones](MIGRATION.md) | Cambios de esquema, validación y despliegue |
+| [Instalación](INSTALL.md) | Arranque local de la aplicación |
 
-**Frontend**
-- HTML5, CSS3, JavaScript
-- Bootstrap 5
-- Bootstrap Icons
-- Google Fonts (Playfair Display, Inter, Caveat)
-- SweetAlert2
-- Swiper.js
+## Dirección técnica propuesta
 
-**Backend**
-- PHP 8.2 + Apache
-- MySQL 8
-- PDO con consultas preparadas
-- `password_hash` / `password_verify`
-- Sesiones nativas + tokens CSRF
+- React + Next.js + TypeScript para la web pública, paneles y backend modular Node.js.
+- PostgreSQL como base principal y Prisma para acceso tipado y migraciones versionadas.
+- Tailwind CSS + shadcn/ui como base personalizable; selección completa y motivos en arquitectura.
+- Redis para caché y BullMQ para tareas; notificaciones persistidas en PostgreSQL y tiempo real con SSE.
+- Nginx como proxy inverso con HTTPS; aplicación, PostgreSQL y Redis en red privada.
+- Docker Compose para desarrollo y primer despliegue; calidad y migraciones en CI/CD.
 
-**Infraestructura**
-- Docker / Docker Compose
-- phpMyAdmin
+Se interpreta «postgrest» como **PostgreSQL**. [PostgREST](https://docs.postgrest.org/en/stable/) es un servidor que publica una API sobre PostgreSQL, una herramienta distinta. Queda fuera de la propuesta inicial porque ya habrá una API de negocio con Prisma. Si la intención era usar PostgREST expresamente, revisar esta decisión antes de implementar el acceso a datos.
 
----
+**Decisión confirmada:** Next.js + React + TypeScript, con API REST y Prisma como propietario del esquema. Los clientes no acceden directamente a la base de datos.
 
-## Cómo levantar el proyecto
+## Ejecutar Next.js
 
-> Guía completa paso a paso en **[INSTALL.md](INSTALL.md)**.
+Requiere Node.js 24, npm y Docker Desktop con motor Linux. Desde la raíz:
 
-Resumen rápido:
-
-```bash
-git clone https://github.com/ArtemioMV/Coffe.git
-cd Coffe
-cp .env.example .env       # ajusta valores si lo deseas
-docker compose up -d
+```powershell
+npm ci
+npm run env:setup
+docker compose -f compose.next.yml up -d --wait
+npm run db:generate
+npm run db:deploy
 ```
 
-| Servicio   | URL                      | Notas                                  |
-|------------|--------------------------|----------------------------------------|
-| Web        | http://localhost:8080    | Sitio público y paneles                |
-| phpMyAdmin | http://localhost:8081    | usuario `root` · contraseña del `.env` |
-| MySQL      | localhost:3307           | externo · credenciales en `.env`       |
+Para datos demo, habilitar `SEED_DEMO=true` explícitamente según [DESARROLLO.md](docs/DESARROLLO.md). Después: `npm run dev`; worker en otra terminal con `npm run worker`.
 
-**Configuración** — todas las variables sensibles (credenciales BD, puertos,
-WhatsApp, reglas de puntos) están en `.env`. Plantilla en `.env.example`.
+| Servicio | Acceso local |
+|---|---|
+| Next.js / API REST | http://localhost:3000 |
+| PostgreSQL | `127.0.0.1:55432` |
+| Redis caché / colas | `127.0.0.1:56379` / `127.0.0.1:56380` |
 
-**Base de datos** — se inicializa automáticamente con `database/init.sql`
-(esquema completo + 74 productos en 12 categorías). Las contraseñas semilla
-se encriptan con `password_hash()` la primera vez que arranca PHP.
+Los puertos se configuran en `.env`. Consulta la guía de desarrollo para usar PostgreSQL embebido, preparar datos de demostración y ejecutar pruebas. [DESARROLLO.md](docs/DESARROLLO.md)
 
-Para detener:
-```bash
-docker compose down            # mantiene los datos
-docker compose down -v         # borra el volumen MySQL (reinicia datos)
-```
+## Acuerdos y pendientes
 
----
+El flujo confirmado es: QR de mesa → carta → solicitud del cliente → aviso al mozo → confirmación del mozo → comanda a cocina → preparación → listo → aviso al mozo → recogida → entrega → cobro. Cocina no recibe las solicitudes pendientes de aprobación.
 
-## Credenciales iniciales (demo)
+Administración gestiona carta y mesas (crear, editar, activar/desactivar y renovar QR). Inventario distingue productos de venta e insumos con recetas/movimientos. Se incluyen impresión de comanda, precuenta y ticket interno; la emisión electrónica de boleta/factura requiere una integración fiscal independiente.
 
-| Rol           | Correo                | Contraseña  |
-|---------------|-----------------------|-------------|
-| Administrador | admin@ukumari.com     | Admin123    |
-| Mesero        | mesero@ukumari.com    | Mesero123   |
-| Cocina/Barra  | cocina@ukumari.com    | Cocina123   |
-| Cliente       | cliente@ukumari.com   | Cliente123  |
+Las guías de desarrollo y coordinación registran el estado y los pendientes. [DESARROLLO.md](docs/DESARROLLO.md) · [COORDINACION.md](docs/COORDINACION.md)
 
----
-
-## Estructura
-
-```
-ukumari-web/
-├── docker-compose.yml
-├── README.md
-├── database/
-│   └── init.sql
-└── web/
-    ├── index.php          ← Home con hero, nosotros, swiper, CTA
-    ├── carta.php          ← Carta digital filtrable
-    ├── carrito.php        ← Carrito (localStorage)
-    ├── checkout.php       ← Confirmación de pedido
-    ├── login.php          ← Inicio de sesión
-    ├── registro.php       ← Registro de cliente
-    ├── recuperar.php      ← Recuperación de contraseña (token)
-    ├── logout.php
-    ├── perfil.php         ← Mi cuenta · puntos · historial · canje
-    ├── api/
-    │   ├── pedido_crear.php   ← Recibe carrito y guarda pedido
-    │   └── pedido_estado.php  ← Cambia estado (cocina/mesero/admin)
-    ├── includes/
-    │   ├── config.php
-    │   ├── db.php             ← Conexión PDO + autoseed seguro
-    │   ├── auth.php           ← Sesiones, login, require_role
-    │   ├── helpers.php        ← Pedidos, puntos, utilidades
-    │   ├── header.php / footer.php
-    │   └── panel_layout.php / panel_footer.php
-    ├── admin/                 ← Panel administrador
-    ├── mesero/                ← Panel mesero
-    ├── cocina/                ← Panel cocina/barra
-    └── assets/
-        ├── css/styles.css
-        ├── css/local-images.css   ← override para tus fotos
-        ├── js/cart.js · js/app.js
-        └── img/                   ← logo, hero, slides…
-```
-
----
-
-## Roles y permisos
-
-| Capacidad                              | Cliente | Mesero | Cocina | Admin |
-|----------------------------------------|:------:|:------:|:------:|:-----:|
-| Ver carta                              |   ✔    |   ✔    |   ✔    |   ✔   |
-| Hacer pedido (carrito → checkout)      |   ✔    |   —    |   —    |   ✔   |
-| Crear pedido para una mesa             |   —    |   ✔    |   —    |   ✔   |
-| Ver pedidos pendientes                 |   —    |   ✔    |   ✔    |   ✔   |
-| Cambiar estado a "en preparación/listo"|   —    |   —    |   ✔    |   ✔   |
-| Marcar pedido como entregado           |   —    |   ✔    |   —    |   ✔   |
-| Gestionar productos / categorías       |   —    |   —    |   —    |   ✔   |
-| Activar / desactivar productos         |   —    |   —    |   —    |   ✔   |
-| Gestionar usuarios y roles             |   —    |   —    |   —    |   ✔   |
-| Ver reportes                           |   —    |   —    |   —    |   ✔   |
-| Acumular y canjear puntos              |   ✔    |   —    |   —    |   —   |
-
-> Los productos no se eliminan físicamente: se desactivan (campo `activo`).
-
----
-
-## Flujo principal
-
-**Cliente**
-1. Entra al Home → "Ver carta".
-2. Filtra por categoría, agrega productos al carrito (localStorage).
-3. Va al carrito, ajusta cantidades, presiona "Continuar pedido".
-4. Si no tiene cuenta, se le pide login/registro.
-5. En `checkout` elige tipo de pedido (recojo / mesa / delivery), método de pago y observaciones.
-6. Confirma → el pedido se guarda en MySQL en estado **pendiente** y aparece en el panel de cocina.
-7. Gana **1 punto por cada S/ 1** gastado. Puede canjearlos en `perfil.php` (100 pts = S/ 5).
-
-**Mesero**
-1. Inicia sesión → `mesero/dashboard.php`.
-2. "Nuevo pedido" → elige una mesa, busca productos, los agrega y envía a cocina.
-3. Cuando cocina marca el pedido como "listo", el mesero lo entrega y lo marca como **entregado**.
-
-**Cocina / Barra**
-1. Entra a `cocina/pedidos-pendientes.php` (auto-refresh cada 30 s).
-2. Ve cada pedido como una tarjeta con productos, observaciones y origen (cliente o mesero).
-3. Cambia estados: **pendiente → en preparación → listo**.
-
-**Administrador**
-1. Dashboard con KPIs (ventas hoy, pendientes, productos activos, pedidos totales).
-2. Productos / Categorías / Usuarios / Pedidos / Reportes.
-
----
-
-## Sistema de puntos
-
-- Se otorga **1 punto por cada S/ 1.00** del total del pedido (solo para clientes registrados).
-- Se registra cada movimiento en `puntos_movimientos` (tipo: `ganados` o `canjeados`).
-- En `perfil.php`, el cliente puede canjear bloques de **100 puntos = S/ 5.00** de descuento.
-- Las constantes están en `web/includes/helpers.php`:
-  ```php
-  const PUNTOS_POR_SOL = 1;
-  const PUNTOS_CANJE_BLOQUE = 100;
-  const SOLES_POR_BLOQUE_CANJE = 5;
-  ```
-
----
-
-## Personalización con tus imágenes
-
-Sigue las instrucciones de `web/assets/img/README-imagenes.txt`:
-
-1. Copia tus archivos a `web/assets/img/` con estos nombres exactos:
-   `logo.png` (o `.svg`), `hero.jpg`, `nosotros.jpg`,
-   `slide-1.jpg` … `slide-4.jpg`, `auth.jpg`.
-2. El logo se detecta automáticamente.
-3. Para hero, slides, "nosotros" y auth, abre `web/assets/css/local-images.css`
-   y descomenta los bloques de las imágenes que reemplazaste.
-
----
-
-## Seguridad
-
-- Contraseñas con `password_hash` (BCRYPT).
-- PDO con consultas preparadas en todas las queries.
-- Tokens CSRF en formularios y APIs sensibles.
-- Sesiones validadas por rol en cada panel (`require_role()`).
-- Productos no se eliminan: se desactivan.
-
----
-
-## Tecnologías cargadas por CDN
-
-- Bootstrap 5.3.3
-- Bootstrap Icons 1.11
-- Swiper 11
-- SweetAlert2 11
-- Google Fonts
-
-No requieren instalación local; basta con conexión a internet en el contenedor.
-
----
-
-¡Listo para servir café! ☕
+Antes de publicar, completar nombre, RUC, dirección, horarios, carta/precios, zonas/mesas, responsables de reclamos, canales y políticas. Falta elegir alojamiento, correo y, si se requieren, proveedores de pagos, facturación y mensajería externa. Estos datos no impiden preparar la estructura del proyecto.

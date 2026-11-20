@@ -1,0 +1,444 @@
+/* Portada: carrusel (modules/inicio), pasos sutiles, experiencias, reseñas y mapa. */
+
+.carousel { position: relative; overflow: hidden; }
+.carousel-track { display: flex; transition: transform .45s ease; }
+.carousel-slide {
+  flex: 0 0 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  align-items: center;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  min-height: clamp(22rem, 52dvh, 30rem);
+  padding: clamp(2rem, 6vw, 4rem) var(--page-gutter) 4.75rem;
+}
+.tone-granate, .tone-verde, .tone-dorado { background: var(--paper); color: var(--brand-ink); }
+
+.carousel-copy { max-width: 560px; }
+.carousel-eyebrow {
+  display: block;
+  margin-bottom: .6rem;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+.tone-dorado .carousel-eyebrow { color: var(--gold-deep); }
+
+.carousel-slide h1, .carousel-slide h2 {
+  margin-bottom: .8rem;
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  line-height: 1.15;
+  color: inherit;
+  font-family: Georgia, serif;
+}
+.carousel-slide p { max-width: 48ch; margin-bottom: 1.35rem; font-size: 1rem; line-height: 1.6; }
+.carousel-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+
+.carousel-art {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: min(100%, 320px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.carousel-art svg { width: 42%; height: 42%; color: var(--gold); }
+.carousel-art.has-image { background: var(--paper); border-color: #fff; }
+.carousel-art img { width: 100%; height: 100%; object-fit: cover; }
+.tone-dorado .carousel-art { background: var(--paper); border-color: #ecd9a8; }
+.tone-dorado .carousel-art svg { color: var(--carmine); }
+
+.carousel-dots {
+  position: absolute;
+  left: 50%;
+  bottom: .65rem;
+  display: flex;
+  align-items: center;
+  transform: translateX(-50%);
+}
+.carousel-dots button { position: relative; width: 44px; height: 44px; background: transparent; }
+.carousel-dots button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid var(--carmine);
+}
+.carousel-dots button[aria-current="true"]::after { background: var(--carmine); }
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-track { transition: none; }
+}
+
+/* Cinta textil cajamarquina */
+.posada-weave {
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--carmine) 0 24px,
+    var(--gold) 24px 32px,
+    var(--green) 32px 56px,
+    #fff 56px 60px,
+    var(--gold) 60px 68px
+  );
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.posada-section {
+  padding: 3.5rem var(--page-gutter);
+}
+.posada-section:nth-of-type(even) {
+  background: #fff;
+}
+#como-pedir { scroll-margin-top: 5rem; }
+
+.section-header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+}
+.section-header h2 {
+  font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+  color: var(--carmine);
+  margin-bottom: .4rem;
+}
+.section-header p {
+  color: var(--muted);
+  font-size: .95rem;
+  margin: 0;
+}
+
+/* ========================================================
+   PASOS PARA PEDIR: SUTILES, CÍRCULOS Y FLECHAS
+======================================================== */
+.steps-flow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 960px;
+  margin: 0 auto 1.5rem;
+}
+.step-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: .5rem;
+}
+.step-circle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--carmine);
+  color: var(--carmine);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+  transition: transform .2s ease;
+}
+.step-item:hover .step-circle {
+  transform: translateY(-3px);
+  border-color: var(--gold-deep);
+  color: var(--gold-deep);
+}
+.step-number {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #1c1917;
+  font-size: .75rem;
+  font-weight: 800;
+  border: 2px solid #fff;
+}
+.step-item h3 {
+  font-size: 1.05rem;
+  margin-bottom: .35rem;
+  color: var(--ink);
+}
+.step-item p {
+  font-size: .85rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+  max-width: 220px;
+}
+.step-arrow {
+  display: grid;
+  place-items: center;
+  color: var(--gold-deep);
+  padding-top: 1.25rem;
+  opacity: .75;
+}
+
+/* ========================================================
+   EXPERIENCIAS
+======================================================== */
+.woven-divider {
+  display: grid;
+  align-items: center;
+  overflow: clip;
+  height: clamp(3rem, 7vw, 7rem);
+  background: var(--paper);
+}
+.woven-divider span {
+  position: relative;
+  margin-inline: -4%;
+  height: clamp(1.5rem, 3.15vw, 2.9rem);
+  transform: rotate(-2deg);
+  border-block: 3px double var(--gold);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 2px, #32131444 2px 3px),
+    repeating-linear-gradient(90deg, transparent 0 1px, #f2d5a62e 1px 2px, transparent 2px 3px),
+    linear-gradient(0deg, var(--brand-ink) 0 16%, var(--gold) 16% 23%, var(--carmine) 23% 77%, var(--gold) 77% 84%, var(--brand-ink) 84%);
+}
+.woven-divider span::after {
+  content: "";
+  position: absolute;
+  inset: 24% 0;
+  background:
+    repeating-linear-gradient(90deg, #4c19283b 0 1px, transparent 1px 3px),
+    repeating-conic-gradient(from 45deg, #f1cf8a 0 25%, transparent 0 50%, #f1cf8a 0 75%, transparent 0) center / 1.2rem 1.2rem;
+  opacity: .85;
+}
+.experience-figure {
+  position: relative;
+  height: clamp(15rem, 25vw, 28rem);
+  background: var(--ink);
+  margin: 0;
+}
+.experience-figure img {
+  object-fit: cover;
+  object-position: center 54%;
+}
+.experience-figure figcaption {
+  position: absolute;
+  inset-inline-end: var(--page-gutter);
+  inset-block-end: .7rem;
+  padding: .25rem .5rem;
+  color: var(--paper);
+  background: var(--ink);
+  font-size: .73rem;
+}
+.experience-content .section-header,
+.reviews-section .section-header { margin-bottom: 1.55rem; }
+.experience-content .section-header h2,
+.reviews-section .section-header h2 { font-size: 1.3rem; font-weight: 400; }
+.experiences-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 1100px;
+  margin: 0 auto;
+  border-block: 1px solid var(--line);
+}
+.experience-card {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  padding: 1.15rem 1rem;
+}
+.experience-card + .experience-card { border-inline-start: 1px solid var(--line); }
+.experience-icon {
+  color: var(--carmine);
+  flex: none;
+}
+
+.experience-card h3 {
+  font-size: 1.05rem;
+  font-weight: 400;
+  margin: 0 0 .3rem;
+  color: var(--brand-ink);
+}
+.experience-card p {
+  font-size: .85rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ========================================================
+   RESEÑAS
+======================================================== */
+.reviews-section { border-block-start: 1px solid var(--line); }
+.featured-review {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 44px;
+  margin: 0 auto .9rem;
+  padding: .45rem .8rem;
+  border-block: 1px solid var(--line);
+  color: var(--brand-ink);
+}
+.featured-review svg { flex: none; }
+.featured-review:hover { text-decoration: underline; }
+.reviews-body { max-width: 1100px; margin-inline: auto; }
+.reviews-empty { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .65rem 1rem; }
+.reviews-status { text-align: center; margin: 0 0 .6rem; color: var(--muted); }
+.reviews-status:empty { margin: 0; }
+.reviews-layout {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 1.25rem;
+}
+.reviews-summary { display: grid; align-content: start; justify-items: start; gap: .35rem; }
+.reviews-summary strong { font-size: 1.4rem; color: var(--brand-ink); line-height: 1.2; }
+.reviews-summary strong span, .reviews-order { font-size: .82rem; font-weight: 400; }
+.reviews-summary p, .reviews-order { color: var(--muted); margin: 0; }
+.google-attribution { font: 400 .9rem / 1.3 Roboto, Arial, sans-serif; color: #5e5e5e; white-space: nowrap; }
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+}
+.review-card {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: .6rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  overflow-wrap: anywhere;
+}
+.review-author { display: flex; gap: .6rem; align-items: center; }
+.review-author strong, .review-author small { display: block; }
+.review-author small { color: var(--muted); }
+.review-avatar { border-radius: 50%; object-fit: cover; flex: none; }
+.review-stars { display: flex; gap: 2px; color: var(--gold-deep); }
+.review-card blockquote { margin: 0; color: var(--ink-secondary); white-space: pre-line; line-height: 1.5; }
+.review-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  min-height: 32px;
+  font-size: .85rem;
+  color: var(--brand-ink);
+  text-decoration: underline;
+  text-underline-offset: .18em;
+}
+.review-link svg { flex: none; }
+.reviews-order { display: block; margin-top: .7rem; }
+.review-policies { margin-top: 1rem; color: var(--muted); font-size: .8rem; }
+.review-policies details { max-width: 62ch; }
+.review-policies summary { width: fit-content; min-height: 32px; display: flex; align-items: center; }
+.review-policies a, .reviews-order a, .review-author a { text-decoration: underline; text-underline-offset: .15em; }
+
+/* ========================================================
+   UBÍCANOS Y GOOGLE MAPS
+======================================================== */
+.map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 2rem;
+  max-width: 1040px;
+  margin: 0 auto;
+  align-items: center;
+}
+.map-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.map-info strong { display: block; font-size: .95rem; margin-bottom: .2rem; }
+.map-info p { margin: 0; font-size: .88rem; color: var(--ink-secondary); }
+.map-directions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.map-directions a { min-height: 44px; }
+
+.map-frame-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+  background: #eee;
+}
+.map-frame-wrap iframe { display: block; width: 100%; border: 0; }
+
+.social-section { border-top: 1px solid var(--line); }
+.social-section .section-header { margin-bottom: 1.5rem; }
+.social-section .section-header h2 { font-size: 1.3rem; font-weight: 400; }
+.social-profiles {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: .6rem 1.25rem;
+}
+.social-profiles a {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .5rem .75rem;
+  min-height: 44px;
+  color: var(--brand-ink);
+  border-bottom: 1px solid var(--line);
+}
+.social-profiles a:hover { border-color: var(--carmine); }
+.social-posts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  max-width: 880px;
+  margin: 1.5rem auto 0;
+}
+.social-posts:empty { display: none; }
+.social-preview {
+  display: grid;
+  justify-items: center;
+  gap: .45rem;
+  min-width: 0;
+  width: min(100%, 340px);
+  padding: .75rem;
+  border: 1px solid var(--line);
+}
+.social-preview button { min-height: 44px; }
+.social-frame { width: 100%; height: 34rem; border: 0; }
+
+/* ========================================================
+   RESPONSIVE
+======================================================== */
+@media (max-width: 900px) {
+  .experiences-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .experience-card:nth-child(odd) { border-inline-start: 0; }
+  .experience-card:nth-child(n + 3) { border-block-start: 1px solid var(--line); }
+  .map-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .carousel-slide { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 1.1rem; min-height: 0; padding-top: 2rem; padding-bottom: 3.5rem; }
+  .carousel-art { grid-row: 1; justify-self: start; width: min(40vw, 150px); }
+  .steps-flow { flex-direction: column; align-items: center; gap: 1rem; }
+  .step-arrow { transform: rotate(90deg); padding: 0; }
+  .posada-section { padding: 2.5rem var(--page-gutter); }
+  .experience-figure { height: clamp(15rem, 50vw, 24rem); }
+  .reviews-layout { grid-template-columns: minmax(0, 1fr); gap: .9rem; }
+  .review-link, .review-policies summary { min-height: 44px; }
+}
+
+@media (max-width: 480px) {
+  .experiences-grid { grid-template-columns: 1fr; }
+  .experiences-grid .experience-card + .experience-card { border-inline-start: 0; border-block-start: 1px solid var(--line); }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "restaurante-campestre",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @restaurant/web",
+    "build": "npm run db:generate && npm run build --workspace @restaurant/web",
+    "start": "npm run start --workspace @restaurant/web",
+    "worker": "tsx --env-file=.env apps/worker/src/index.ts",
+    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/worker/tsconfig.json",
+    "test": "vitest run",
+    "test:integration": "vitest run -c vitest.integration.config.mts",
+    "test:e2e": "node scripts/e2e.mjs",
+    "skills:sync": "node scripts/sync-skills.mjs",
+    "db:generate": "prisma generate --schema packages/database/prisma/schema.prisma",
+    "db:validate": "prisma validate --schema packages/database/prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema packages/database/prisma/schema.prisma",
+    "db:deploy": "prisma migrate deploy --schema packages/database/prisma/schema.prisma",
+    "db:seed": "tsx --env-file=.env packages/database/src/seed.ts",
+    "db:studio": "prisma studio --schema packages/database/prisma/schema.prisma",
+    "env:setup": "node scripts/setup-env.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "bcryptjs": "^3.0.2",
+    "bullmq": "^5.0.0",
+    "dotenv": "^17.0.0",
+    "ioredis": "^5.0.0",
+    "nodemailer": "10.6.0",
+    "qrcode": "^1.5.4",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^24.0.0",
+    "@types/nodemailer": "^7.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "embedded-postgres": "17.11.0-beta.19",
+    "prisma": "6.19.3",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "5.1.1"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
+  }
+}

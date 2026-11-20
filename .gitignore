@@ -17,9 +17,12 @@ volumes/
 data/
 *.sqlite
 
-# Variables de entorno reales (mantener config.php para defaults Docker)
+# Variables de entorno reales
 .env
 .env.local
+.env.*
+!.env.example
+backups/
 
 # Logs
 *.log
@@ -28,3 +31,16 @@ logs/
 # Archivos temporales
 *.tmp
 *.cache
+
+# Next.js / Node / herramientas
+node_modules/
+.next/
+.next-e2e/
+.cache/
+coverage/
+playwright-report/
+test-results/
+.vitest/
+*.tsbuildinfo
+apps/web/next-env.d.ts
+apps/web/public/uploads/

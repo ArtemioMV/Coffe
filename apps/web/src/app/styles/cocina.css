@@ -1,0 +1,61 @@
+.kitchen-search { margin-bottom: 1rem; max-width: 32rem; }
+.kitchen-search svg { color: var(--carmine); }
+
+.kitchen-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: .85rem;
+}
+
+.kitchen-lane {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.kitchen-lane-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .9rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--carmine);
+}
+
+.kitchen-lane-header h2 {
+  margin: 0;
+  font: 700 1rem system-ui, sans-serif;
+  color: inherit;
+}
+
+.kitchen-lane-header svg { flex: none; }
+.kitchen-count {
+  display: grid;
+  min-width: 1.65rem;
+  min-height: 1.65rem;
+  place-items: center;
+  margin-left: auto;
+  padding: 0 .35rem;
+  border-radius: 6px;
+  background: var(--carmine);
+  color: #fff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.kitchen-lane-orders { display: grid; gap: .65rem; padding: .6rem; }
+.kitchen-empty { padding: .8rem .4rem; margin: 0; color: var(--muted); font-size: .85rem; }
+.kitchen-lane .order-card { padding: .75rem; border-inline-start: 3px solid var(--carmine); }
+.kitchen-lane .order-card.order-ready { border-color: var(--line); border-inline-start-color: var(--green); }
+.order-card-header h3 { color: var(--brand-ink); margin: 0 0 .3rem; }
+.order-table-label, .order-timestamp { display: flex; align-items: center; gap: .35rem; }
+.order-table-label { color: var(--ink-secondary); font-size: .85rem; }
+.order-timestamp { margin-top: .35rem; }
+.order-item-line { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+.order-item-line span { flex: none; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 950px) {
+  .kitchen-board { grid-template-columns: minmax(0, 1fr); }
+}

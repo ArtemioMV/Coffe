@@ -1,0 +1,69 @@
+.mesas-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 23rem);
+  align-items: start;
+  gap: 1rem;
+}
+.mesas-workspace > * { min-width: 0; }
+.mesas-overview { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: 1rem; }
+.mesas-overview h2 { margin: 0; color: var(--brand-ink); }
+.mesas-legend { display: flex; flex-wrap: wrap; gap: .5rem .9rem; color: var(--ink-secondary); font-size: .8rem; }
+.mesas-legend li, .mesa-tile-state { display: inline-flex; align-items: center; gap: .35rem; }
+.dot { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot-libre { background: var(--green); }
+.dot-atencion { background: var(--carmine); }
+.dot-inactiva { background: var(--muted); }
+.mesas-zone { margin-bottom: 1rem; }
+.mesas-zone > h3 { color: var(--ink-secondary); margin-bottom: .55rem; }
+.mesas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr)); gap: .55rem; }
+
+.mesa-tile {
+  --table-accent: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: .3rem;
+  min-width: 0;
+  min-height: 70px;
+  padding: .55rem .7rem;
+  border: 1px solid var(--line);
+  border-inline-start: 3px solid var(--table-accent);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+}
+.mesa-libre { --table-accent: var(--green); }
+.mesa-atencion { --table-accent: var(--carmine); }
+.mesa-tile:hover { background: var(--surface-alt); }
+.mesa-tile[aria-pressed="true"] { background: var(--carmine); border-color: var(--carmine); color: #fff; }
+.mesa-tile[aria-pressed="true"] .dot { background: #fff; }
+.mesa-tile-name { display: flex; align-items: center; gap: .45rem; font-weight: 700; overflow-wrap: anywhere; }
+.mesa-tile-name svg { flex: none; color: var(--table-accent); }
+.mesa-tile[aria-pressed="true"] svg { color: inherit; }
+.mesa-tile-state { font-size: .8rem; }
+
+.mesa-detail { position: sticky; top: 5rem; }
+.mesa-detail-heading, .mesa-order-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; }
+.mesa-detail-heading h2, .mesa-orders h3, .mesa-detail-meta { display: flex; align-items: center; gap: .4rem; }
+.mesa-detail-heading h2 { margin: 0; color: var(--brand-ink); overflow-wrap: anywhere; }
+.mesa-detail svg { flex: none; }
+.mesa-detail-meta { color: var(--ink-secondary); font-size: .85rem; margin: .5rem 0 0; }
+.mesa-orders { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .8rem; }
+.mesa-orders article { padding: .65rem 0; border-bottom: 1px solid var(--line); }
+.mesa-orders ul { display: grid; gap: .15rem; margin: .45rem 0; padding: 0; font-size: .85rem; }
+.mesa-orders li { display: flex; justify-content: space-between; gap: .6rem; }
+.mesa-orders li span:last-child { flex: none; }
+.mesa-orders p { margin-bottom: 0; }
+.mesa-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; margin-top: .9rem; }
+.button.capsule { border-radius: 999px; }
+.capsule-full { grid-column: 1 / -1; }
+.mesa-qr { margin-top: 1rem; padding-top: .85rem; border-top: 1px solid var(--line); }
+.mesa-qr img { max-width: 100%; height: auto; }
+.qr-actions { justify-content: center; }
+
+@media (max-width: 950px) {
+  .mesas-workspace { grid-template-columns: minmax(0, 1fr); }
+  .mesa-detail { position: static; }
+}
