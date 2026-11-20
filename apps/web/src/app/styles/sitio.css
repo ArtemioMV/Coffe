@@ -116,7 +116,7 @@
 .footer-links a { color: var(--ink-secondary); }
 .footer-links a:hover { color: var(--carmine); text-decoration: underline; text-underline-offset: 3px; }
 .footer-links a:focus-visible { outline-color: var(--gold-deep); }
-.footer-claims {
+.site-text-link {
   display: inline-flex;
   align-items: center;
   gap: .4rem;
@@ -124,8 +124,8 @@
   font-weight: 500;
   transition: color .15s ease;
 }
-.footer-claims svg { width: 15px; height: 15px; flex: none; color: var(--gold-deep); }
-.footer-claims:hover { color: var(--carmine); text-decoration: underline; text-underline-offset: 3px; }
+.site-text-link svg { width: 15px; height: 15px; flex: none; color: var(--gold-deep); }
+.site-text-link:hover { color: var(--carmine); text-decoration: underline; text-underline-offset: 3px; }
 
 .footer-legal {
   display: flex;

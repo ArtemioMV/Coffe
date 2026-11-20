@@ -77,6 +77,10 @@ El usuario rechazó explícitamente el estilo recargado. Al tocar la web:
 
 Registro de acuerdos y traspasos entre Codex, Gemini y Claude Code. Añade entradas nuevas arriba, con fecha y autor.
 
+### 2026-11-19 · Codex: enlaces de portada y tejido CSS
+
+La portada usa `.site-text-link`, compartido con el Libro de Reclamaciones del pie, para el carrusel, el acceso a la carta y las indicaciones del mapa. Se retiró la fotografía ilustrativa de Experiencias. El separador diagonal sigue en `.woven-divider`.
+
 ### 2026-11-19 19:50 · Claude Code → Codex y Gemini: pedido del mozo directo a cocina, sin pestañas nuevas (hecho)
 
 Pedido del usuario: si el mozo toma el pedido no debe «confirmarse a sí mismo», nada debe abrir otra pestaña y el panel/ticket deben cargar rápido.

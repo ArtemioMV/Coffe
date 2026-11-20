@@ -8,12 +8,21 @@ test("Administración publica los enlaces sociales y la portada muestra los camb
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(page.getByRole("heading", { name: "La experiencia de La Posada" })).toBeVisible();
+  await expect(page.getByText("Imagen ilustrativa", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".woven-divider")).toBeVisible();
+  const menuLink = page.getByRole("link", { name: "Explorar la carta completa", exact: true });
+  await expect(menuLink).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(menuLink).toHaveCSS("border-top-width", "0px");
   await expect(page.getByRole("link", { name: "Ver reseña compartida en Google Maps" })).toHaveAttribute("href", "https://maps.app.goo.gl/8pwp6QwgMfCp68Bq9");
   const social = page.getByRole("region", { name: "Visita nuestras redes" });
   await expect(social.getByRole("link", { name: "Instagram" })).toHaveAttribute("href", "https://www.instagram.com/posadacajamarquina/");
   await expect(page.getByRole("link", { name: "Waze" })).toHaveAttribute("href", /ll=-8\.1426352%2C-79\.058001/);
   await page.getByRole("button", { name: /Ir a la diapositiva 2/ }).click();
   await expect(page.getByRole("button", { name: /Ir a la diapositiva 2/ })).toHaveAttribute("aria-current", "true");
+  const howLink = page.getByRole("link", { name: "Cómo funciona", exact: true });
+  await expect(howLink).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(howLink).toHaveCSS("border-top-width", "0px");
   await expect(page.getByRole("button", { name: "Diapositiva siguiente" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "Mi cuenta", exact: true }).click();

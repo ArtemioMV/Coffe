@@ -8,7 +8,6 @@ import {
   Sparkles,
   UtensilsCrossed
 } from "lucide-react";
-import { Button } from "@restaurant/ui";
 import { Carousel } from "@/modules/inicio/carousel";
 import { Experiences } from "@/modules/inicio/experiences";
 import { Reviews } from "@/modules/inicio/reviews";
@@ -71,12 +70,10 @@ export default function Home() {
           </div>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: "1.8rem" }}>
-          <Button asChild className="button-primary">
-            <Link href="/carta">
-              <UtensilsCrossed size={16} aria-hidden /> Explorar la carta completa
-            </Link>
-          </Button>
+        <div className="steps-cta">
+          <Link className="site-text-link" href="/carta">
+            <UtensilsCrossed aria-hidden /> Explorar la carta completa
+          </Link>
         </div>
       </section>
 
@@ -97,8 +94,8 @@ export default function Home() {
               <p>{restaurantLocality}</p>
             </div>
             <div className="map-directions">
-              <Button asChild variant="outline"><a href={restaurantDirectionsUrl}><MapPin size={18} aria-hidden /> Google Maps</a></Button>
-              <Button asChild variant="outline"><a href={restaurantWazeUrl}><Navigation size={18} aria-hidden /> Waze</a></Button>
+              <a className="site-text-link" href={restaurantDirectionsUrl}><MapPin aria-hidden /> Google Maps</a>
+              <a className="site-text-link" href={restaurantWazeUrl}><Navigation aria-hidden /> Waze</a>
             </div>
           </div>
 

@@ -34,6 +34,10 @@
 }
 .carousel-slide p { max-width: 48ch; margin-bottom: 1.35rem; font-size: 1rem; line-height: 1.6; }
 .carousel-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.carousel-actions .site-text-link,
+.steps-cta .site-text-link,
+.map-directions .site-text-link { min-height: 32px; }
+.steps-cta { text-align: center; margin-top: 1.8rem; }
 
 .carousel-art {
   justify-self: center;
@@ -219,25 +223,6 @@
     repeating-conic-gradient(from 45deg, #f1cf8a 0 25%, transparent 0 50%, #f1cf8a 0 75%, transparent 0) center / 1.2rem 1.2rem;
   opacity: .85;
 }
-.experience-figure {
-  position: relative;
-  height: clamp(15rem, 25vw, 28rem);
-  background: var(--ink);
-  margin: 0;
-}
-.experience-figure img {
-  object-fit: cover;
-  object-position: center 54%;
-}
-.experience-figure figcaption {
-  position: absolute;
-  inset-inline-end: var(--page-gutter);
-  inset-block-end: .7rem;
-  padding: .25rem .5rem;
-  color: var(--paper);
-  background: var(--ink);
-  font-size: .73rem;
-}
 .experience-content .section-header,
 .reviews-section .section-header { margin-bottom: 1.55rem; }
 .experience-content .section-header h2,
@@ -366,7 +351,6 @@
 .map-info strong { display: block; font-size: .95rem; margin-bottom: .2rem; }
 .map-info p { margin: 0; font-size: .88rem; color: var(--ink-secondary); }
 .map-directions { display: flex; flex-wrap: wrap; gap: .6rem; }
-.map-directions a { min-height: 44px; }
 
 .map-frame-wrap {
   border-radius: 14px;
@@ -433,7 +417,9 @@
   .steps-flow { flex-direction: column; align-items: center; gap: 1rem; }
   .step-arrow { transform: rotate(90deg); padding: 0; }
   .posada-section { padding: 2.5rem var(--page-gutter); }
-  .experience-figure { height: clamp(15rem, 50vw, 24rem); }
+  .carousel-actions .site-text-link,
+  .steps-cta .site-text-link,
+  .map-directions .site-text-link { min-height: 44px; }
   .reviews-layout { grid-template-columns: minmax(0, 1fr); gap: .9rem; }
   .review-link, .review-policies summary { min-height: 44px; }
 }

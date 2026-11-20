@@ -30,7 +30,7 @@ export function SiteFooter() {
 
         <nav aria-label="Atención al consumidor" className="footer-links">
           <h2>Atención al consumidor</h2>
-          <Link href="/libro-de-reclamaciones" className="footer-claims">
+          <Link href="/libro-de-reclamaciones" className="site-text-link">
             <BookOpenText aria-hidden /> Libro de Reclamaciones
           </Link>
           <Link href="/panel">Acceso del personal</Link>

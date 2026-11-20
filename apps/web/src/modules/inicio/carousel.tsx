@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { QrCode, UtensilsCrossed, Sparkles } from "lucide-react";
-import { Button } from "@restaurant/ui";
+import { BookOpenText, QrCode, UtensilsCrossed, Sparkles } from "lucide-react";
 import type { Slide } from "./slides";
 
 const INTERVAL_MS = 6000;
@@ -47,13 +46,13 @@ export function Carousel({ slides }: { slides: Slide[] }) {
                 <Heading>{slide.title}</Heading>
                 <p>{slide.text}</p>
                 <div className="carousel-actions">
-                  <Button asChild className="button-primary">
-                    <Link href={slide.action.href}>{slide.action.label}</Link>
-                  </Button>
+                  <Link className="site-text-link" href={slide.action.href}>
+                    <Icon aria-hidden /> {slide.action.label}
+                  </Link>
                   {slide.secondary && (
-                    <Button asChild variant="outline">
-                      <Link href={slide.secondary.href}>{slide.secondary.label}</Link>
-                    </Button>
+                    <Link className="site-text-link" href={slide.secondary.href}>
+                      <BookOpenText aria-hidden /> {slide.secondary.label}
+                    </Link>
                   )}
                 </div>
               </div>
