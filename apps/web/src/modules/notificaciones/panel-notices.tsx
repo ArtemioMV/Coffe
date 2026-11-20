@@ -11,13 +11,15 @@ export function PanelNotices({ notices, onRead, busy }: {
       <h2 id="notificaciones-titulo">Notificaciones</h2>
       {!notices.length && <p>No hay notificaciones todavía.</p>}
       {notices.map(notice => (
-        <article key={notice.id} className={notice.readAt ? "notice read" : "notice"}>
+        <article key={notice.id} className={notice.readAt || notice.acknowledgedAt ? "notice read" : "notice"}>
           <div>
             <strong>{notice.title}</strong>
             <p>{notice.body}</p>
             <small>{dateTime(notice.createdAt)}</small>
           </div>
-          {!notice.readAt && (
+          {notice.acknowledgedAt ? (
+            <span className="badge">Resuelto</span>
+          ) : !notice.readAt && (
             <Button variant="ghost" onClick={() => onRead(notice.id)} disabled={busy}>
               Marcar leído
             </Button>

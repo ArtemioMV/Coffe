@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Armchair, ClipboardList, Users } from "lucide-react";
 import { Button } from "@restaurant/ui";
-import { mutation, type Order, type Table, type User } from "@/lib/client";
+import { dateTime, mutation, type Order, type Table, type User } from "@/lib/client";
 import { cents, money, statusLabels } from "@restaurant/contracts";
 import { DisclosureSummary } from "@/components/disclosure-summary";
 
@@ -65,7 +65,15 @@ export function TablesView({ tables, orders, user, run, busy, initialTableId = n
             <p className="mesa-detail-meta"><Users size={15} aria-hidden /> {selected.seats} {selected.seats === 1 ? "asiento" : "asientos"} <span>· {selected.zone}</span></p>
             {attention && <p className="mesa-detail-meta">Mozo: {attention.waiter.name}</p>}
             <TableOrders orders={selectedOrders} />
-            <TableActions table={selected} user={user} run={run} busy={busy} onQr={() => setQrId(selected.id)} />
+            {selected.recentAttentions?.length > 0 && (
+              <details>
+                <DisclosureSummary>Últimas atenciones cerradas</DisclosureSummary>
+                <ul>{selected.recentAttentions.map(entry => (
+                  <li key={entry.id}>{entry.waiter.name} · {dateTime(entry.openedAt)} – {dateTime(entry.closedAt)}</li>
+                ))}</ul>
+              </details>
+            )}
+            <TableActions resolved={selectedOrders.every(o => ["CANCELLED", "REJECTED"].includes(o.status) || (o.status === "DELIVERED" && cents(o.total) === cents(o.paid)))} table={selected} user={user} run={run} busy={busy} onQr={() => setQrId(selected.id)} />
             {qrId === selected.id && <QrPreview table={selected} onClose={() => setQrId(null)} />}
           </aside>
         </div>
@@ -74,29 +82,49 @@ export function TablesView({ tables, orders, user, run, busy, initialTableId = n
   );
 }
 
+const BILLABLE = ["PENDING", "PREPARING", "READY", "DELIVERED"];
+
+/** Pedidos de la atención: cada pedido con sus comandas y un solo saldo. */
 function TableOrders({ orders }: { orders: Order[] }) {
+  const accounts = [...new Set(orders.map(o => o.accountId))].map(id =>
+    orders.filter(o => o.accountId === id).sort((a, b) => a.round - b.round)
+  );
   return (
     <section className="mesa-orders" aria-label="Pedidos de la atención">
       <h3><ClipboardList size={17} aria-hidden /> Pedidos de la atención</h3>
-      {orders.length ? orders.map(order => (
-        <article key={order.id}>
-          <div className="mesa-order-heading">
-            <strong>Pedido #{order.number}</strong>
-            <span className={`badge status-${order.status.toLowerCase()}`}>{statusLabels[order.status] ?? order.status}</span>
-          </div>
-          <ul>
-            {order.items.map(item => <li key={item.id}><span>{item.name}</span><span>× {item.quantity}</span></li>)}
-          </ul>
-          {!["CANCELLED", "REJECTED"].includes(order.status) && (
-            <p>Saldo: <strong>{money((cents(order.total) - cents(order.paid)) / 100)}</strong></p>
-          )}
-        </article>
-      )) : <p className="small-note">No hay pedidos visibles para esta atención.</p>}
+      {accounts.length ? accounts.map(group => {
+        const due = group.filter(o => BILLABLE.includes(o.status)).reduce((sum, o) => sum + cents(o.total) - cents(o.paid), 0);
+        return (
+          <article key={group[0].accountId} className="mesa-account">
+            <div className="mesa-order-heading">
+              <strong>Pedido #{group[0].accountNumber}</strong>
+              {group.length === 1 && <span className={`badge status-${group[0].status.toLowerCase()}`}>{statusLabels[group[0].status] ?? group[0].status}</span>}
+            </div>
+            {group.map(order => (
+              <div key={order.id} className={group.length > 1 ? "mesa-round" : undefined}>
+                {group.length > 1 && (
+                  <div className="mesa-order-heading">
+                    <span>Comanda {order.round}</span>
+                    <span className={`badge status-${order.status.toLowerCase()}`}>{statusLabels[order.status] ?? order.status}</span>
+                  </div>
+                )}
+                <ul>
+                  {order.items.map(item => <li key={item.id}><span>{item.name}</span><span>× {item.quantity}</span></li>)}
+                </ul>
+              </div>
+            ))}
+            {group.some(o => !["CANCELLED", "REJECTED"].includes(o.status)) && (
+              <p>Saldo: <strong>{money(due / 100)}</strong></p>
+            )}
+          </article>
+        );
+      }) : <p className="small-note">No hay pedidos visibles para esta atención.</p>}
     </section>
   );
 }
 
-function TableActions({ table, user, run, busy, onQr }: {
+function TableActions({ table, user, run, busy, onQr, resolved }: {
+  resolved: boolean;
   table: Table;
   user: User;
   run: Run;
@@ -116,14 +144,14 @@ function TableActions({ table, user, run, busy, onQr }: {
           </Button>
         )}
         {canServe && attention && own && (
-          <>
-            <Button asChild className="capsule capsule-full">
-              <Link href={`/carta?mesa=${table.qrToken}`}>Tomar pedido</Link>
-            </Button>
-            <Button variant="outline" className="capsule" disabled={busy} onClick={() => void run(() => mutation(`tables/${table.id}/close`, {}))}>
-              Cerrar atención
-            </Button>
-          </>
+          <Button asChild className="capsule capsule-full">
+            <Link href={`/carta?mesa=${table.qrToken}`}>Tomar pedido</Link>
+          </Button>
+        )}
+        {attention && ["ADMIN", "CASHIER"].includes(user.role) && (
+          resolved ? <Button variant="outline" className="capsule" disabled={busy} onClick={() => void run(() => mutation(`tables/${table.id}/close`, { attentionId: attention.id }))}>
+            Cerrar atención
+          </Button> : <span className="small-note">Cierre pendiente de entrega o pago</span>
         )}
         {canServe && (
           <Button variant="outline" className="capsule" onClick={onQr}>Ver QR</Button>

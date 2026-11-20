@@ -38,8 +38,8 @@ Web: http://localhost:3000. En otra terminal: `npm run worker` para correo/recor
 3. Cliente escanea, agrega platos y envía al mozo. Obtiene seguimiento privado.
 4. Mozo confirma; cocina recibe comanda. Si rechaza, exige motivo y no descuenta insumos.
 5. Cocina inicia preparación y marca listo. Mozo confirma recogida y después entrega.
-6. Caja registra pago verificado. Imprimir precuenta, comanda o ticket desde el pedido.
-7. Mozo cierra mesa cuando no quedan pendientes/saldo. El cliente puede valorar el pedido entregado.
+6. Si la mesa pide más antes de pagar, se suma al mismo pedido como comanda 2, 3…; el mozo puede tomarlo desde «Tomar pedido» y va directo a cocina. Caja registra el pago verificado del pedido completo. Imprimir precuenta (todo el pedido), comanda (solo esa tanda) o ticket.
+7. Caja o administración libera la mesa desde «Mesas y QR» cuando termina la visita y no quedan entregas ni saldo pendientes. El cliente puede valorar el pedido entregado.
 
 Administración publica carta, crea/desactiva mesas, renueva QR, define insumos/recetas y controla usuarios. Una mesa desactivada o sin atención abierta no admite pedidos por QR. La carta cambia desde el panel sin editar código.
 

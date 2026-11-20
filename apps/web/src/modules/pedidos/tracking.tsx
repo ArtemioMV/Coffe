@@ -91,7 +91,7 @@ export function Tracking({ id }: { id: string }) {
     <div className="page-shell narrow">
       <div className="page-heading">
         <span className="eyebrow">ESTAMOS CONTIGO · SEGUIMIENTO EN VIVO</span>
-        <h1>{order ? `Pedido #${order.number}` : "Tu pedido"}</h1>
+        <h1>{order ? `Pedido #${order.accountNumber}${order.round > 1 ? ` · comanda ${order.round}` : ""}` : "Tu pedido"}</h1>
         <p>Consulta aquí cómo va tu preparación. Actualizamos este seguimiento automáticamente.</p>
       </div>
 

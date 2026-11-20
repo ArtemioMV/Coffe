@@ -1,8 +1,9 @@
 export type User = { id: string; name: string; email: string; role: "ADMIN" | "WAITER" | "KITCHEN" | "CASHIER" | "CUSTOMER"; points: number };
 export type Product = { id: string; name: string; description: string; price: string; available: boolean; active?: boolean; categoryId?: string; station: string; recipe?: { ingredientId: string; quantity: string }[] };
 export type Category = { id: string; name: string; products: Product[] };
-export type Order = { id: string; number: number; tableName: string; attentionId?: string | null; status: string; version: number; total: string; paid: string; createdAt: string; guestName: string; notes: string; acknowledgedAt: string | null; items: { id: string; name: string; price: string; quantity: number; notes: string; station: string }[] };
-export type Table = { id: string; name: string; zone: string; seats: number; active: boolean; qrToken: string; attentions: { id: string; waiterId: string; waiter: { id: string; name: string } }[] };
+/** Una comanda. accountId/accountNumber: el pedido de la mesa al que pertenece; round: 1 la primera, 2… las que se sumaron. */
+export type Order = { id: string; number: number; accountId: string; accountNumber: number; round: number; tableName: string; attentionId?: string | null; status: string; version: number; total: string; paid: string; createdAt: string; guestName: string; notes: string; acknowledgedAt: string | null; items: { id: string; name: string; price: string; quantity: number; notes: string; station: string }[] };
+export type Table = { id: string; name: string; zone: string; seats: number; active: boolean; qrToken: string; recentAttentions: { id: string; openedAt: string; closedAt: string; waiter: { name: string } }[]; attentions: { id: string; waiterId: string; waiter: { id: string; name: string } }[] };
 export type Notice = { id: string; sequence: number; orderId: string | null; title: string; body: string; readAt: string | null; acknowledgedAt: string | null; createdAt: string };
 /** Error de la API con el código HTTP, para distinguir sesión vencida (401) de otros fallos. */
 export class ApiError extends Error {

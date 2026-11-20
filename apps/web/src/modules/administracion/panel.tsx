@@ -25,7 +25,7 @@ import {
   Share2
 } from "lucide-react";
 import { Button } from "@restaurant/ui";
-import { money, statusLabels } from "@restaurant/contracts";
+import { cents, money, statusLabels } from "@restaurant/contracts";
 import { api, mutation, sessionExpired, SESSION_EVENT, User, Order, Table, Notice, Product, dateTime } from "@/lib/client";
 import { brandLogo } from "@/lib/brand";
 import { DisclosureSummary } from "@/components/disclosure-summary";
@@ -35,6 +35,8 @@ import { TablesView } from "@/modules/mesas/tables-view";
 import { AdminSocial } from "@/modules/social/admin-social";
 
 type Run = (task: () => Promise<unknown>) => Promise<void>;
+/** Comandas que cuentan para la cuenta: confirmadas y no anuladas. */
+const BILLABLE = ["PENDING", "PREPARING", "READY", "DELIVERED"];
 const roleNames = {
   ADMIN: "Administración",
   WAITER: "Mozo",
@@ -245,7 +247,8 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
   // Una vista de la URL que no corresponde al rol cae en la primera disponible.
   const activeTab = tabs.includes(tab) ? tab : tabs[0];
 
-  const unread = notices.filter(n => !n.readAt).length;
+  // Un aviso ya resuelto (p. ej. «por confirmar» después de confirmar) no cuenta como pendiente.
+  const unread = notices.filter(n => !n.readAt && !n.acknowledgedAt).length;
 
   async function activateSound() {
     audio.current ??= new AudioContext();
@@ -462,7 +465,7 @@ function Access({ onUser, initialError }: { onUser: (user: User) => void; initia
 }
 
 function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; run: Run; busy: boolean }) {
-  const [filter, setFilter] = useState("active");
+  const [filter, setFilter] = useState(user.role === "CASHIER" ? "unpaid" : "active");
   const [search, setSearch] = useState("");
   const kitchenView = user.role === "KITCHEN";
 
@@ -525,26 +528,24 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
 
   const visible = orders.filter(
     o => kitchenView
-      ? `${o.number} mesa ${o.tableName}`.toLocaleLowerCase("es").includes(search.trim().replace(/^#/, "").toLocaleLowerCase("es"))
+      ? `${o.accountNumber} ${o.number} mesa ${o.tableName}`.toLocaleLowerCase("es").includes(search.trim().replace(/^#/, "").toLocaleLowerCase("es"))
       : filter === "all" ||
+      (filter === "unpaid" && BILLABLE.includes(o.status) && cents(o.total) > cents(o.paid)) ||
       filter === o.status ||
       (filter === "active" && !["DELIVERED", "CANCELLED", "REJECTED"].includes(o.status))
   );
+  // Fuera de cocina se muestra un pedido por mesa con todas sus comandas, aunque el filtro coincida solo con una.
+  const accounts = [...new Set(visible.map(o => o.accountId))].map(id =>
+    orders.filter(o => o.accountId === id).sort((a, b) => a.round - b.round)
+  );
 
-  function renderOrder(order: Order) {
+  const plates = (list: Order[]) => list.reduce((sum, o) => sum + o.items.reduce((n, i) => n + i.quantity, 0), 0);
+  // Se despliega solo lo que pide una acción del que mira (por confirmar, listo para recoger).
+  const needsLook = (list: Order[]) => list.some(o => o.status === "AWAITING_WAITER" || o.status === "READY");
+
+  function itemList(order: Order) {
     return (
-      <article
-        key={order.id}
-        className={`order-card ${order.status === "READY" ? "order-ready" : ""}`}
-      >
-        <div className="order-card-header">
-          <div>
-            <h3>Pedido #{order.number}</h3>
-            <span className="order-table-label"><Armchair size={15} aria-hidden /> Mesa {order.tableName}</span>
-          </div>
-          {!kitchenView && <span className={`badge status-${order.status.toLowerCase()}`}>{statusLabels[order.status]}</span>}
-        </div>
-        <small className="order-timestamp"><Clock size={13} aria-hidden /> {dateTime(order.createdAt)} {order.guestName && !kitchenView && `· ${order.guestName}`}</small>
+      <>
         {order.items.map(item => (
           <div className="order-item" key={item.id}>
             <div className="order-item-line">
@@ -555,30 +556,112 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
           </div>
         ))}
         {order.notes && <p className="order-notes">Observaciones: {order.notes}</p>}
-        {!kitchenView && (
-          <div className="cart-total">
-            <span>Total: {money(order.total)}</span>
-            <span>Saldo: {money(Number(order.total) - Number(order.paid))}</span>
+      </>
+    );
+  }
+
+  function summaryLine(list: Order[], total: number, due: number) {
+    const count = plates(list);
+    return (
+      <p className="order-summary">
+        <span>{count} {count === 1 ? "plato" : "platos"}</span>
+        <span>Total <strong>{money(total)}</strong></span>
+        <span>Saldo <strong>{money(due)}</strong></span>
+      </p>
+    );
+  }
+
+  /** Cocina: la comanda completa a la vista, porque es lo que se prepara. */
+  function renderCommand(order: Order) {
+    return (
+      <article key={order.id} className={`order-card ${order.status === "READY" ? "order-ready" : ""}`}>
+        <div className="order-card-header">
+          <div>
+            <h3>Pedido #{order.accountNumber}{order.round > 1 ? ` · comanda ${order.round}` : ""}</h3>
+            <span className="order-table-label"><Armchair size={15} aria-hidden /> Mesa {order.tableName}</span>
           </div>
-        )}
+        </div>
+        <small className="order-timestamp"><Clock size={13} aria-hidden /> {dateTime(order.createdAt)}</small>
+        {itemList(order)}
         <div className="order-actions">
           {actions(order)}
-          {user.role !== "CUSTOMER" && (
+          <Button asChild variant="outline">
+            <Link href={`/panel/ticket/${order.id}?tipo=comanda`}>
+              <Printer size={16} aria-hidden /> Imprimir comanda
+            </Link>
+          </Button>
+        </div>
+      </article>
+    );
+  }
+
+  /**
+   * Panel de mozo, caja y administración: una tarjeta compacta por pedido de la mesa.
+   * Siempre a la vista: mesa, estado, total, saldo y acciones. Los platos se despliegan al pulsar.
+   */
+  function renderAccount(group: Order[]) {
+    const [first] = group;
+    const multi = group.length > 1;
+    const billable = group.filter(o => BILLABLE.includes(o.status));
+    const total = (multi ? billable : group).reduce((sum, o) => sum + cents(o.total), 0) / 100;
+    const due = billable.reduce((sum, o) => sum + cents(o.total) - cents(o.paid), 0) / 100;
+    return (
+      <article key={first.accountId} className={`order-card ${group.some(o => o.status === "READY") ? "order-ready" : ""}`}>
+        <div className="order-card-header">
+          <div>
+            <h3>Pedido #{first.accountNumber}</h3>
+            <span className="order-table-label"><Armchair size={15} aria-hidden /> Mesa {first.tableName}</span>
+          </div>
+          {multi
+            ? <span className="badge">{group.length} comandas</span>
+            : <span className={`badge status-${first.status.toLowerCase()}`}>{statusLabels[first.status]}</span>}
+        </div>
+        <small className="order-timestamp">
+          <Clock size={13} aria-hidden /> {dateTime(first.createdAt)} {first.guestName && `· ${first.guestName}`}
+        </small>
+        {summaryLine(group, total, due)}
+
+        {multi && (
+          <ul className="order-rounds">
+            {group.map(order => (
+              <li key={order.id}>
+                <div className="order-round-head">
+                  <span>Comanda {order.round}</span>
+                  <span className={`badge status-${order.status.toLowerCase()}`}>{statusLabels[order.status]}</span>
+                </div>
+                <div className="order-actions">{actions(order)}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <details className="order-detail" open={needsLook(group)}>
+          <DisclosureSummary>Ver platos</DisclosureSummary>
+          <div>
+            {group.map(order => (
+              <section key={order.id} className="order-round-items" aria-label={multi ? `Comanda ${order.round}` : undefined}>
+                {multi && <h4>Comanda {order.round}</h4>}
+                {itemList(order)}
+              </section>
+            ))}
+          </div>
+        </details>
+
+        <div className="order-actions order-card-footer">
+          {!multi && actions(first)}
+          {user.role !== "CUSTOMER" ? (
             <Button asChild variant="outline">
-              <Link href={`/panel/ticket/${order.id}?tipo=${kitchenView ? "comanda" : "precuenta"}`}>
-                <Printer size={16} aria-hidden /> {kitchenView ? "Imprimir comanda" : "Imprimir"}
+              <Link href={`/panel/ticket/${first.id}?tipo=precuenta`}>
+                <Printer size={16} aria-hidden /> {multi ? "Imprimir precuenta" : "Imprimir"}
               </Link>
             </Button>
-          )}
-          {user.role === "CUSTOMER" && (
-            <Button asChild variant="outline"><Link href={`/pedido/${order.id}`}>Ver seguimiento</Link></Button>
+          ) : (
+            <Button asChild variant="outline"><Link href={`/pedido/${first.id}`}>Ver seguimiento</Link></Button>
           )}
         </div>
-        {["ADMIN", "CASHIER"].includes(user.role) &&
-          Number(order.paid) < Number(order.total) &&
-          ["PENDING", "PREPARING", "READY", "DELIVERED"].includes(order.status) && (
-            <PaymentForm order={order} run={run} busy={busy} />
-          )}
+        {["ADMIN", "CASHIER"].includes(user.role) && due > 0.004 && (
+          <PaymentForm orderId={first.id} due={due} run={run} busy={busy} />
+        )}
       </article>
     );
   }
@@ -590,7 +673,7 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
         <span className="sr-only">Buscar pedido por número o mesa</span>
         <input type="search" placeholder="Buscar pedido por número o mesa" value={search} onChange={e => setSearch(e.target.value)} />
       </label>
-      <KitchenBoard orders={visible} renderOrder={renderOrder} />
+      <KitchenBoard orders={visible} renderOrder={renderCommand} />
     </>
   );
 
@@ -600,7 +683,8 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
         <label>
           Mostrar
           <select value={filter} onChange={e => setFilter(e.target.value)}>
-            <option value="active">En atención activa</option>
+            <option value="active">Pendientes de entrega</option>
+            <option value="unpaid">Pendientes de cobro</option>
             <option value="all">Todos los pedidos</option>
             {Object.entries(statusLabels).map(([value, label]) => (
               <option key={value} value={value}>
@@ -609,11 +693,11 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
             ))}
           </select>
         </label>
-        {visible.length > 0 && <p>{visible.length} {visible.length === 1 ? "pedido" : "pedidos"}</p>}
+        {accounts.length > 0 && <p>{accounts.length} {accounts.length === 1 ? "pedido" : "pedidos"}</p>}
       </div>
 
-      {visible.length ? (
-        <div className="orders-grid">{visible.map(renderOrder)}</div>
+      {accounts.length ? (
+        <div className="orders-grid">{accounts.map(renderAccount)}</div>
       ) : (
         <p className="workspace-message">No hay pedidos en esta vista.</p>
       )}
@@ -621,7 +705,8 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
   );
 }
 
-function PaymentForm({ order, run, busy }: { order: Order; run: Run; busy: boolean }) {
+/** Cobro sobre el pedido completo: el servidor reparte el importe entre sus comandas confirmadas. */
+function PaymentForm({ orderId, due, run, busy }: { orderId: string; due: number; run: Run; busy: boolean }) {
   const [show, setShow] = useState(false);
   const key = useRef(crypto.randomUUID());
 
@@ -639,7 +724,7 @@ function PaymentForm({ order, run, busy }: { order: Order; run: Run; busy: boole
             e.preventDefault();
             const values = Object.fromEntries(new FormData(e.currentTarget));
             void run(async () => {
-              await mutation(`orders/${order.id}/payments`, values, "POST", {
+              await mutation(`orders/${orderId}/payments`, values, "POST", {
                 "Idempotency-Key": key.current
               });
               setShow(false);
@@ -651,7 +736,7 @@ function PaymentForm({ order, run, busy }: { order: Order; run: Run; busy: boole
             Importe (S/)
             <input
               name="amount"
-              defaultValue={(Number(order.total) - Number(order.paid)).toFixed(2)}
+              defaultValue={due.toFixed(2)}
               type="number"
               step="0.01"
               min="0.01"

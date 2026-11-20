@@ -6,8 +6,8 @@ La aplicación cuenta con bandeja persistente, SSE y consulta de respaldo. Las c
 
 | Evento | Destinatarios | Aviso/acción |
 |---|---|---|
-| Solicitud creada/ampliada desde QR | Mozo asignado y administración | Mesa, ítems y observaciones; confirmar o rechazar con motivo |
-| Pedido confirmado por el mozo | Cocina/barra afectada; confirmación a cliente | Nueva comanda de preparación; cocina no recibe solicitudes sin confirmar |
+| Solicitud creada/ampliada desde QR | Mozo asignado y administración | Mesa, ítems y observaciones; confirmar o rechazar con motivo. Al resolverse, el aviso queda «Resuelto» y no cuenta como pendiente |
+| Pedido confirmado por el mozo (o tomado por él) | Cocina/barra afectada; confirmación a cliente; mozo de la mesa si lo tomó administración | Nueva comanda («Pedido #12 · comanda 2» si se sumó a un pedido abierto); cocina no recibe solicitudes sin confirmar. Quien actúa no recibe aviso de su propia acción |
 | Preparación iniciada | Mesero y cliente correspondiente | Actualizar estado sin alarma repetitiva |
 | Ítem/comanda lista | Mesero asignado; encargado si falta | Prioritario: «Mesa 7 · Pedido #123 · listo»; «Voy a recoger» |
 | Pedido listo para recojo | Cliente y personal de entrega | Seguimiento y correo opcional |

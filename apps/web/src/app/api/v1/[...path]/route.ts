@@ -8,7 +8,7 @@ import { business, origin } from "@/lib/env";
 import { rateLimit } from "@/lib/rate-limit";
 import { currentUser, digest, login, logout, register, requireUser, requestReset, resetPassword } from "@/modules/identidad/service";
 import { menu, invalidateMenu } from "@/modules/catalogo/service";
-import { accessibleOrder, changeOrder, createOrder, orderInclude, orderView, serial } from "@/modules/pedidos/service";
+import { accessibleOrder, changeOrder, createOrder, listPanelOrders, orderView, serial } from "@/modules/pedidos/service";
 import { closeTable, openTable, tableList } from "@/modules/mesas/service";
 import { notifications, staffIds, event } from "@/modules/notificaciones/service";
 import { payOrder, ticketData } from "@/modules/caja/service";
@@ -70,7 +70,7 @@ async function route(request: Request, context: Context) {
       const mine = Boolean(attention && actor && (actor.role === "ADMIN" || (actor.role === "WAITER" && attention.waiterId === actor.id)));
       return json({ name: table.name, zone: table.zone, open: Boolean(attention), mine, id: mine ? table.id : undefined });
     }
-    if (path === "tables" && method === "GET") { await requireUser(["ADMIN", "WAITER", "CASHIER"]); return json({ tables: await tableList() }); }
+    if (path === "tables" && method === "GET") { const actor = await requireUser(["ADMIN", "WAITER", "CASHIER"]); return json({ tables: await tableList(actor) }); }
     if (path === "tables" && method === "POST") {
       const actor = await requireUser(["ADMIN"]);
       const data = tableInput.parse(await body(request));
@@ -91,7 +91,7 @@ async function route(request: Request, context: Context) {
         return json(table);
       }
       if (parts[2] === "open" && method === "POST") return json(await openTable(id, await requireUser(["ADMIN", "WAITER"])), 201);
-      if (parts[2] === "close" && method === "POST") return json(await closeTable(id, await requireUser(["ADMIN", "WAITER"])));
+      if (parts[2] === "close" && method === "POST") return json(await closeTable(id, await requireUser(["ADMIN", "CASHIER"]), z.object({ attentionId: z.cuid().optional() }).parse(await body(request)).attentionId));
       if (parts[2] === "qr" && method === "GET") {
         await requireUser(["ADMIN", "WAITER"]);
         const table = await db.diningTable.findUniqueOrThrow({ where: { id } });
@@ -129,8 +129,7 @@ async function route(request: Request, context: Context) {
     }
     if (path === "orders" && method === "GET") {
       const actor = await requireUser();
-      const where: Prisma.OrderWhereInput = actor.role === "CUSTOMER" ? { customerId: actor.id } : actor.role === "WAITER" ? { attention: { waiterId: actor.id } } : actor.role === "KITCHEN" ? { status: { in: ["PENDING", "PREPARING", "READY"] } } : {};
-      const orders = await db.order.findMany({ where, include: orderInclude, orderBy: { createdAt: "desc" }, take: 100 });
+      const orders = await listPanelOrders(actor);
       return json({ orders: orders.map(o => orderView(o, actor.role !== "CUSTOMER")) });
     }
     if (parts[0] === "orders" && parts[1]) {

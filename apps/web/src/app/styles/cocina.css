@@ -59,3 +59,19 @@
 @media (max-width: 950px) {
   .kitchen-board { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Panel de pedidos (mozo, caja, administración): tarjetas compactas de igual altura por fila. */
+.orders-grid > .order-card { display: flex; flex-direction: column; min-width: 0; }
+.orders-grid .order-card-footer { margin-top: auto; padding-top: .75rem; }
+.order-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem .75rem; margin: .65rem 0 0; padding: .5rem .65rem; background: var(--surface-alt); border-radius: 8px; font-size: .82rem; color: var(--ink-secondary); }
+.order-summary strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.order-detail { margin-top: .55rem; border-top: 1px solid var(--line); }
+.order-detail > summary { font-size: .82rem; color: var(--carmine); }
+.order-detail > div { padding-top: .1rem; }
+.order-rounds { display: grid; gap: .4rem; margin: .6rem 0 0; padding: 0; list-style: none; }
+.order-rounds li { padding: .45rem .6rem; border: 1px solid var(--line); border-radius: 8px; }
+.order-round-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .85rem; font-weight: 600; }
+.order-rounds .order-actions { margin-top: .4rem; }
+.order-rounds .order-actions:empty, .order-card-footer:empty { display: none; }
+.order-round-items + .order-round-items { margin-top: .6rem; }
+.order-round-items h4 { margin: 0; font-size: .82rem; color: var(--ink-secondary); }

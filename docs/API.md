@@ -18,18 +18,18 @@ Sesión en cookie HttpOnly `restaurant_session`, token aleatorio hasheado en bas
 | `GET /tables/resolve/:token` | Datos mínimos de mesa activa y si tiene atención abierta |
 | `GET /tables` | Admin/mozo/caja; estado de mesas y asignaciones |
 | `POST /tables`, `PATCH /tables/:id` | Admin crea/edita/activa/desactiva; no desactivar con atención abierta |
-| `POST /tables/:id/open`, `/tables/:id/close` | Admin/mozo; cierre solo con pedidos resueltos y saldo cero |
+| `POST /tables/:id/open`, `/tables/:id/close` | Apertura por mozo o administración. Cierre por caja o administración con pedidos resueltos y saldo cero; enviar `attentionId` para identificar la visita |
 | `GET /tables/:id/qr`, `POST /tables/:id/rotate-qr` | SVG imprimible; renovación de código por admin |
 | `GET /catalog` | Admin: carta completa y recetas |
 | `POST /categories` | Admin agrega categoría |
 | `POST /products`, `PATCH /products/:id` | Admin crea/edita/activa/agota platos |
 | `PUT /products/:id/recipe` | Admin reemplaza receta con cantidades por unidad base |
-| `POST /orders` | Cliente/invitado con QR activo y atención abierta; siempre pendiente del mozo |
+| `POST /orders` | QR activo y atención abierta. Cliente/invitado: comanda pendiente del mozo. Mozo de la mesa o admin: comanda confirmada directo a cocina. Si la mesa tiene un pedido sin cobrar por completo, la comanda se suma a ese pedido (`accountNumber`, `round`) |
 | `GET /orders` | Datos por rol: cliente propios, mozo asignados, cocina solo confirmados |
 | `GET /orders/:id` | Propietario, personal autorizado o clave privada de seguimiento |
 | `POST /orders/:id/transition` | Confirmar/rechazar, preparar, listo, recoger, entregar y cancelar según rol/estado |
-| `POST /orders/:id/payments` | Admin/caja registra cobro previamente verificado, sin exceder saldo |
-| `GET /orders/:id/ticket` | Datos autorizados de impresión; no emite boleta/factura electrónica |
+| `POST /orders/:id/payments` | Admin/caja registra cobro verificado sobre el pedido completo de la mesa (cualquier comanda sirve como id); se reparte entre comandas confirmadas, sin exceder el saldo |
+| `GET /orders/:id/ticket` | Comanda (solo esa tanda) y `account` con el pedido completo para precuenta/ticket; cocina no recibe `account`. No emite boleta/factura electrónica |
 | `POST /orders/:id/rating` | Consumo entregado y verificado, una valoración por pedido |
 | `GET /notifications`, `PATCH /notifications/:id` | Bandeja propia y lectura |
 | `GET /events` | SSE autenticado, cursor/heartbeat, conexión de 60 s renovable |

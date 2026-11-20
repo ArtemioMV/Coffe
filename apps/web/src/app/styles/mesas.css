@@ -67,3 +67,6 @@
   .mesas-workspace { grid-template-columns: minmax(0, 1fr); }
   .mesa-detail { position: static; }
 }
+
+.mesa-account { padding: .65rem 0; border-bottom: 1px solid var(--line); }
+.mesa-account .mesa-round { margin-top: .45rem; padding-left: .6rem; border-left: 2px solid var(--line); }

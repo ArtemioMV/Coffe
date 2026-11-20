@@ -7,13 +7,31 @@ import { digest } from "@/modules/identidad/service";
 import { event, staffIds } from "@/modules/notificaciones/service";
 
 export type Actor = { id: string; role: Role };
-export const orderInclude = { items: true, attention: { include: { table: true } }, payments: true } satisfies Prisma.OrderInclude;
+export const orderInclude = { items: true, attention: { include: { table: true } }, payments: true, parent: { select: { number: true } } } satisfies Prisma.OrderInclude;
 export type FullOrder = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
+/** Estados que forman parte de la cuenta: confirmados por el mozo y no anulados. */
+export const BILLABLE: OrderStatus[] = ["PENDING", "PREPARING", "READY", "DELIVERED"];
+export const paidCents = (order: { payments: { amount: Prisma.Decimal }[] }) => order.payments.reduce((sum, p) => sum + cents(p.amount.toFixed(2)), 0);
+/** «#12» para el pedido; «#12 · comanda 2» para lo que se sumó después. */
+export const orderLabel = (order: { number: number; round: number; parent?: { number: number } | null }) =>
+  order.round > 1 && order.parent ? `#${order.parent.number} · comanda ${order.round}` : `#${order.number}`;
+/**
+ * Pedido abierto de la atención: el último pedido que aún tiene algo por cobrar (o por confirmar).
+ * Mientras exista, lo nuevo que pida la mesa se suma como comanda; cobrado por completo, se abre otro.
+ */
+async function openAccount(tx: Prisma.TransactionClient, attentionId: string) {
+  const orders = await tx.order.findMany({ where: { attentionId }, include: { payments: true }, orderBy: { createdAt: "asc" } });
+  const root = [...orders].reverse().find(order => !order.parentId);
+  if (!root) return null;
+  const group = orders.filter(order => order.id === root.id || order.parentId === root.id);
+  const pending = group.some(order => !["REJECTED", "CANCELLED"].includes(order.status) && paidCents(order) < cents(order.total.toFixed(2)));
+  return pending ? { root, round: Math.max(...group.map(order => order.round)) + 1 } : null;
+}
 export function orderView(order: FullOrder, internal = false) {
-  return { id: order.id, number: order.number, status: order.status, version: order.version, mode: order.mode,
+  return { id: order.id, number: order.number, accountId: order.parentId ?? order.id, accountNumber: order.parent?.number ?? order.number, round: order.round, status: order.status, version: order.version, mode: order.mode,
     guestName: order.guestName, notes: order.notes, total: order.total.toFixed(2), createdAt: order.createdAt,
     acknowledgedAt: order.acknowledgedAt, tableName: order.attention?.table.name || "—", attentionId: internal ? order.attentionId : undefined,
-    paid: decimal(order.payments.reduce((sum, p) => sum + cents(p.amount.toFixed(2)), 0)),
+    paid: decimal(paidCents(order)),
     items: order.items.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price.toFixed(2), notes: item.notes, station: item.station })) };
 }
 export async function serial<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
@@ -66,16 +84,32 @@ export async function createOrder(input: unknown, key: string | null, customerId
     const history = staff
       ? { actorId: staff.id, status: "PENDING", reason: "Pedido tomado por el mozo; enviado a cocina" }
       : { status: "AWAITING_WAITER", reason: "Pedido por QR; pendiente de confirmación" };
-    const order = await tx.order.create({ data: { attentionId: attention.id, customerId, guestName: data.guestName, notes: data.notes, total: decimal(total), idempotencyKey: key, requestHash, trackingHash: digest(token), status: staff ? "PENDING" : "AWAITING_WAITER", items: { create: items }, history: { create: history } }, include: orderInclude });
+    const account = await openAccount(tx, attention.id);
+    const order = await tx.order.create({ data: { attentionId: attention.id, parentId: account?.root.id, round: account?.round ?? 1, customerId, guestName: data.guestName, notes: data.notes, total: decimal(total), idempotencyKey: key, requestHash, trackingHash: digest(token), status: staff ? "PENDING" : "AWAITING_WAITER", items: { create: items }, history: { create: history } }, include: orderInclude });
     if (staff) {
       await consumeStock(tx, order, staff.id);
-      await event(tx, "order.confirm", order.id, `Pedido #${order.number}: comanda nueva`, await staffIds(tx, ["ADMIN", "KITCHEN"]), `Mesa ${table.name}`);
+      // Cocina recibe la comanda; si la tomó administración, también se entera el mozo de la mesa. Nadie se avisa a sí mismo.
+      const recipients = [attention.waiterId, ...await staffIds(tx, ["ADMIN", "KITCHEN"])].filter(id => id !== staff.id);
+      await event(tx, "order.confirm", order.id, `Pedido ${orderLabel(order)}: comanda nueva`, recipients, `Mesa ${table.name}`);
     } else {
-      await event(tx, "order.created", order.id, `Mesa ${table.name}: pedido #${order.number} por confirmar`, [attention.waiterId, ...await staffIds(tx, ["ADMIN"])], "Revisa el pedido antes de enviarlo a cocina.");
+      await event(tx, "order.created", order.id, `Mesa ${table.name}: pedido ${orderLabel(order)} por confirmar`, [attention.waiterId, ...await staffIds(tx, ["ADMIN"])], "Revisa el pedido antes de enviarlo a cocina.");
     }
     return { order: orderView(order, Boolean(staff)), token };
   });
 }
+export async function listPanelOrders(actor: Actor) {
+  const where: Prisma.OrderWhereInput = actor.role === "CUSTOMER" ? { customerId: actor.id } : actor.role === "WAITER" ? { attention: { waiterId: actor.id } } : actor.role === "KITCHEN" ? { status: { in: ["PENDING", "PREPARING", "READY"] } } : {};
+  // Una atención abierta debe seguir visible aunque haya cien comandas posteriores.
+  const staffHistory = ["ADMIN", "WAITER", "CASHIER"].includes(actor.role);
+  let scope = where;
+  if (staffHistory) {
+    const recent = await db.order.findMany({ where, select: { id: true, parentId: true }, orderBy: { number: "desc" }, take: 100 });
+    const accounts = recent.map(order => order.parentId ?? order.id);
+    scope = { AND: [where, { OR: [{ attention: { closedAt: null } }, { id: { in: accounts } }, { parentId: { in: accounts } }] }] };
+  }
+  return db.order.findMany({ where: scope, include: orderInclude, orderBy: { number: "desc" }, take: actor.role === "CUSTOMER" ? 100 : undefined });
+}
+
 export async function accessibleOrder(id: string, actor: Actor | null, token: string | null) {
   const order = await db.order.findUnique({ where: { id }, include: orderInclude });
   assert(order, 404, "Pedido no encontrado");
@@ -110,9 +144,12 @@ export async function changeOrder(id: string, action: string, version: number, r
     const updated = await tx.order.updateMany({ where: { id, version }, data: { status: status as OrderStatus, version: { increment: 1 }, ...(action === "acknowledge" ? { acknowledgedAt: new Date() } : {}) } });
     assert(updated.count === 1, 409, "El pedido cambió");
     await tx.orderHistory.create({ data: { orderId: id, actorId: actor.id, status: action === "acknowledge" ? "ACKNOWLEDGED" : status, reason } });
-    const recipients = action === "confirm" ? await staffIds(tx, ["ADMIN", "KITCHEN"]) : [order.attention?.waiterId, ...await staffIds(tx, ["ADMIN"])].filter((v): v is string => !!v);
+    // Confirmar o rechazar resuelve la solicitud «por confirmar»: ese aviso se cierra antes de crear los nuevos (la comanda de cocina queda abierta).
+    if (["confirm", "reject"].includes(action)) await tx.notification.updateMany({ where: { orderId: id, acknowledgedAt: null }, data: { acknowledgedAt: new Date() } });
+    const recipients = (action === "confirm" ? await staffIds(tx, ["ADMIN", "KITCHEN"]) : [order.attention?.waiterId, ...await staffIds(tx, ["ADMIN"])])
+      .filter((v): v is string => !!v && v !== actor.id); // nadie recibe aviso de su propia acción
     if (order.customerId) recipients.push(order.customerId);
-    const title = action === "ready" ? `Mesa ${order.attention?.table.name}: pedido #${order.number} listo` : `Pedido #${order.number}: ${action === "confirm" ? "comanda nueva" : status.toLowerCase()}`;
+    const title = action === "ready" ? `Mesa ${order.attention?.table.name}: pedido ${orderLabel(order)} listo` : `Pedido ${orderLabel(order)}: ${action === "confirm" ? "comanda nueva" : status.toLowerCase()}`;
     await event(tx, `order.${action}`, id, title, recipients, reason);
     if (["acknowledge", "deliver", "reject", "cancel"].includes(action)) await tx.notification.updateMany({ where: { orderId: id, acknowledgedAt: null }, data: { acknowledgedAt: new Date() } });
     const fresh = await tx.order.findUniqueOrThrow({ where: { id }, include: orderInclude });

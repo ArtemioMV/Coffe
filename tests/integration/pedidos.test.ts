@@ -101,6 +101,26 @@ describe("pedido tomado por el mozo", () => {
   });
 });
 
+describe("avisos sin ruido", () => {
+  it("al confirmar se cierra el aviso «por confirmar» y el mozo no recibe aviso de su propia acción", async () => {
+    const table = await openTable(waiter.id);
+    const { order } = await createOrder(orderBody(table.qrToken, [await product()]), key());
+    const request = await db.notification.findFirstOrThrow({ where: { orderId: order.id, userId: waiter.id } });
+    expect(request.acknowledgedAt).toBeNull();
+
+    const confirmed = await changeOrder(order.id, "confirm", order.version, "", waiter);
+    expect((await db.notification.findUniqueOrThrow({ where: { id: request.id } })).acknowledgedAt).not.toBeNull();
+    const command = await db.notification.findFirstOrThrow({ where: { orderId: order.id, userId: kitchen.id } });
+    expect(command.acknowledgedAt).toBeNull(); // la comanda de cocina sigue pendiente
+
+    const prepared = await changeOrder(order.id, "prepare", confirmed.version, "", kitchen);
+    const ready = await changeOrder(order.id, "ready", prepared.version, "", kitchen);
+    const before = await db.notification.count({ where: { orderId: order.id, userId: waiter.id } });
+    await changeOrder(order.id, "acknowledge", ready.version, "", waiter);
+    expect(await db.notification.count({ where: { orderId: order.id, userId: waiter.id } })).toBe(before);
+  });
+});
+
 describe("transiciones", () => {
   async function newOrder(waiterId = waiter.id) {
     const table = await openTable(waiterId);
@@ -173,10 +193,11 @@ describe("cierre de mesa", () => {
   it("no cierra con pedidos sin entregar y sí con todo rechazado", async () => {
     const table = await openTable(waiter.id);
     const { order } = await createOrder(orderBody(table.qrToken, [await product()]), key());
-    await expectStatus(closeTable(table.id, waiter), 409);
+    await expectStatus(closeTable(table.id, waiter), 403);
+    await expectStatus(closeTable(table.id, admin), 409);
     await expectStatus(closeTable(table.id, otherWaiter), 403);
     await changeOrder(order.id, "reject", 0, "Pedido duplicado", waiter);
-    const closed = await closeTable(table.id, waiter);
+    const closed = await closeTable(table.id, admin);
     expect(closed.closedAt).not.toBeNull();
   });
 });

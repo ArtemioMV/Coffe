@@ -110,9 +110,14 @@ model Attention {
   @@index([tableId, closedAt])
 }
 
+/// Una fila = una comanda (lo que cocina prepara de una vez, con su propio estado).
+/// El pedido de la mesa (la cuenta) es la primera comanda: las siguientes apuntan a ella con parentId
+/// mientras el pedido no esté cobrado por completo; después se abre un pedido nuevo.
 model Order {
   id              String      @id @default(cuid())
   number          Int         @unique @default(autoincrement())
+  parentId        String?
+  round           Int         @default(1)
   attentionId     String?
   customerId      String?
   mode            String      @default("mesa")
@@ -127,6 +132,8 @@ model Order {
   createdAt       DateTime    @default(now()) @db.Timestamptz(3)
   acknowledgedAt  DateTime?   @db.Timestamptz(3)
   attention       Attention?  @relation(fields: [attentionId], references: [id])
+  parent          Order?      @relation("OrderRounds", fields: [parentId], references: [id])
+  rounds          Order[]     @relation("OrderRounds")
   customer        User?       @relation("CustomerOrders", fields: [customerId], references: [id])
   items           OrderItem[]
   history         OrderHistory[]
@@ -136,6 +143,7 @@ model Order {
   stockMovements  StockMovement[]
   @@index([status, createdAt])
   @@index([attentionId])
+  @@index([parentId])
 }
 
 model OrderItem {

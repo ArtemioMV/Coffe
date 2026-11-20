@@ -8,6 +8,8 @@ import { dateTime, Order } from "@/lib/client";
 
 export type TicketData = {
   order: Order;
+  /** Pedido completo de la mesa (todas sus comandas confirmadas). Nulo para cocina. */
+  account: { number: number; orders: Order[]; total: string; paid: string } | null;
   business: { name: string; ruc: string; address: string };
   payments: { amount: string; method: string }[];
 };
@@ -18,6 +20,17 @@ export function Ticket({ data = null, error = "", type: initialType }: { data?: 
   const [type, setType] = useState(initialType);
   // Vuelve a donde estaba (pedidos o la mesa); si se abrió directo, al panel.
   const back = () => (history.length > 1 ? router.back() : router.push("/panel"));
+  // Comanda: solo lo que cocina prepara de esta tanda. Precuenta y ticket: el pedido completo de la mesa.
+  const whole = type !== "comanda" && data?.account && data.account.orders.length ? data.account : null;
+  const items = data ? (whole ? whole.orders.flatMap(o => o.items) : data.order.items) : [];
+  const notes = data ? (whole ? whole.orders.map(o => o.notes).filter(Boolean).join(" · ") : data.order.notes) : "";
+  const total = data ? Number(whole ? whole.total : data.order.total) : 0;
+  const paid = data ? Number(whole ? whole.paid : data.order.paid) : 0;
+  const heading = data
+    ? type === "comanda" && data.order.round > 1
+      ? `Pedido #${data.order.accountNumber} · comanda ${data.order.round}`
+      : `Pedido #${whole?.number ?? data.order.accountNumber}`
+    : "";
 
   return (
     <div className="page-shell">
@@ -57,12 +70,12 @@ export function Ticket({ data = null, error = "", type: initialType }: { data?: 
             {type.toUpperCase()}
           </h3>
           <p>
-            Pedido #{data.order.number} · Mesa {data.order.tableName}<br />
+            {heading} · Mesa {data.order.tableName}<br />
             {dateTime(data.order.createdAt)}
           </p>
 
           <div style={{ padding: "6px 0", margin: "6px 0" }}>
-            {data.order.items.map(i => (
+            {items.map(i => (
               <div className="receipt-line" key={i.id} style={{ padding: "4px 0" }}>
                 <div>
                   {i.quantity} × {i.name}
@@ -73,19 +86,19 @@ export function Ticket({ data = null, error = "", type: initialType }: { data?: 
             ))}
           </div>
 
-          {data.order.notes && <p style={{ fontStyle: "italic" }}>Nota: {data.order.notes}</p>}
+          {notes && <p style={{ fontStyle: "italic" }}>Nota: {notes}</p>}
 
           {type !== "comanda" && (
             <>
               <div className="cart-total" style={{ margin: "8px 0", paddingTop: "4px" }}>
                 <strong>TOTAL</strong>
-                <strong>{money(data.order.total)}</strong>
+                <strong>{money(total)}</strong>
               </div>
               {data.payments.map((p, i) => (
                 <p key={i} style={{ margin: "2px 0" }}>{p.method}: {money(p.amount)}</p>
               ))}
               <p>
-                Saldo: {money(Number(data.order.total) - Number(data.order.paid))}
+                Saldo: {money(total - paid)}
               </p>
             </>
           )}

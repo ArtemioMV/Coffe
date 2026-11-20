@@ -32,7 +32,11 @@ Caja, encargado y responsable de reclamos son permisos nuevos. Una persona puede
 5. El mozo revisa, confirma o rechaza con motivo. Solo la confirmación genera comanda y aviso a cocina/barra, valida disponibilidad y descuenta insumos de recetas. La ampliación enviada por el cliente requiere una nueva confirmación. Cada estación prepara sus ítems con observaciones visibles.
 6. Al marcar listo, avisar al mesero asignado y, cuando corresponda, al cliente. Mesero pulsa «Voy a recoger» y después registra entrega: acciones distintas.
 7. Caja confirma pago; elegir método no demuestra cobro. Transferencias requieren conciliación autorizada.
-8. Cerrar atención sin ítems/pedidos activos ni saldo. Cobro confirmado genera puntos; invitar una vez a valorar.
+8. Caja (o administración) cierra la atención cuando la mesa se retira, con todas las comandas entregadas o anuladas y saldo cero. El mozo registra la entrega. Cobrar deja la visita abierta si los clientes siguen consumiendo. El cierre libera la mesa y queda registrado con su responsable. Cobro confirmado genera puntos; invitar una vez a valorar.
+
+**Un pedido por mesa hasta cobrarlo (decisión del usuario, 2026-11-19).** Lo que la mesa pida mientras su pedido no esté cobrado por completo se suma a ese mismo pedido como comanda adicional («Pedido #12 · comanda 2»): cocina recibe solo los platos nuevos, con su propio estado; mozo y caja ven un total, una precuenta y un cobro. Un pago parcial no cierra el pedido. Con saldo cero, lo siguiente abre un pedido nuevo. Si la única comanda fue rechazada o cancelada, también se abre uno nuevo.
+
+**Pedido tomado por el mozo.** Si quien envía desde la carta es el mozo de esa atención (o administración), la comanda nace confirmada: descuenta insumos y va directo a cocina, sin pedirle confirmación a sí mismo. Otro mozo no puede enviar a una mesa ajena. Nadie recibe aviso de su propia acción; confirmar o rechazar cierra el aviso «por confirmar».
 
 Pedidos adicionales generan comandas nuevas en la misma atención. No modificar silenciosamente ítems enviados a cocina: corrección/ampliación auditada y con aviso. Conflictos concurrentes se resuelven por versión y permisos, sin sobrescritura silenciosa.
 

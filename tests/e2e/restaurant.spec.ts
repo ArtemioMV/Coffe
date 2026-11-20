@@ -54,7 +54,13 @@ test("QR, aprobación del mozo, cocina, ticket, pago y cierre", async ({ page, b
       }
     }
   }
-  expect((await staff.waiter.post(`/api/v1/tables/${table.id}/close`, { data: {} })).status()).toBe(409);
+  expect((await staff.cashier.post(`/api/v1/tables/${table.id}/close`, { data: {} })).status()).toBe(409);
+  expect((await staff.waiter.post(`/api/v1/tables/${table.id}/close`, { data: {} })).status()).toBe(403);
+  const cashierPage = await browser.newPage({ baseURL, storageState: await staff.cashier.storageState() });
+  await cashierPage.goto("/panel?vista=orders");
+  await expect(cashierPage.getByRole("combobox", { name: "Mostrar", exact: true })).toHaveValue("unpaid");
+  const unpaidOrder = cashierPage.getByRole("article").filter({ has: cashierPage.getByRole("heading", { name: `Pedido #${order.number}`, exact: true }) });
+  await expect(unpaidOrder.getByRole("button", { name: "Registrar cobro conciliado" })).toBeVisible();
   const paymentKey = crypto.randomUUID();
   const paymentData = { amount: order.total, method: "EFECTIVO", reference: "" };
   const paid = await staff.cashier.post(`/api/v1/orders/${orderId}/payments`, { data: paymentData, headers: { "Idempotency-Key": paymentKey } });
@@ -62,7 +68,11 @@ test("QR, aprobación del mozo, cocina, ticket, pago y cierre", async ({ page, b
   const replay = await staff.cashier.post(`/api/v1/orders/${orderId}/payments`, { data: paymentData, headers: { "Idempotency-Key": paymentKey } });
   expect((await replay.json()).id).toBe((await paid.json()).id);
   expect((await staff.cashier.post(`/api/v1/orders/${orderId}/payments`, { data: paymentData, headers: { "Idempotency-Key": crypto.randomUUID() } })).status()).toBe(409);
-  expect((await staff.waiter.post(`/api/v1/tables/${table.id}/close`, { data: {} })).status()).toBe(200);
+  await cashierPage.goto(`/panel?vista=tables&mesa=${table.id}`);
+  await cashierPage.getByRole("button", { name: "Cerrar atención", exact: true }).click();
+  await cashierPage.getByText("Últimas atenciones cerradas", { exact: true }).click();
+  await expect(cashierPage.locator("#mesa-detalle details li").first()).toContainText("Mozo");
+  await cashierPage.context().close();
   expect((await staff.admin.patch(`/api/v1/tables/${table.id}`, { data: { active: false } })).status()).toBe(200);
   const ticket = await (await staff.cashier.get(`/api/v1/orders/${orderId}/ticket`)).json();
   expect(ticket.fiscal.enabled).toBe(false);

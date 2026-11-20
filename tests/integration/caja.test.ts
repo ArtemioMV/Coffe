@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@restaurant/database";
-import { changeOrder, createOrder } from "@/modules/pedidos/service";
+import { changeOrder, createOrder, listPanelOrders } from "@/modules/pedidos/service";
 import { payOrder } from "@/modules/caja/service";
 import { closeTable } from "@/modules/mesas/service";
 import { expectStatus, key, openTable, orderBody, product, statusOf, user } from "./helpers";
@@ -92,14 +92,25 @@ describe("puntos", () => {
 });
 
 describe("cierre de mesa con saldo", () => {
+  it("mantiene la cuenta abierta visible tras cien comandas posteriores", async () => {
+    const { order } = await billableOrder("12.00");
+    await db.order.createMany({ data: Array.from({ length: 101 }, () => ({
+      total: "10.00", trackingHash: key(), idempotencyKey: key(), requestHash: key()
+    })) });
+    expect((await listPanelOrders(cashier)).some(row => row.id === order.id)).toBe(true);
+  });
+
   it("una mesa entregada pero sin pagar no cierra; pagada sí", async () => {
     const { table, order } = await billableOrder("12.00");
     let o = await changeOrder(order.id, "prepare", order.version, "", kitchen);
     o = await changeOrder(order.id, "ready", o.version, "", kitchen);
     o = await changeOrder(order.id, "deliver", o.version, "", waiter);
-    await expectStatus(closeTable(table.id, waiter), 409);
+    await expectStatus(closeTable(table.id, cashier), 409);
     await payOrder(order.id, cash("12.00"), key(), cashier);
-    expect((await closeTable(table.id, waiter)).closedAt).not.toBeNull();
+    await expectStatus(closeTable(table.id, cashier, "otra-atencion"), 409);
+    const visit = await closeTable(table.id, cashier);
+    expect(visit.closedAt).not.toBeNull();
+    expect(await db.auditLog.count({ where: { actorId: cashier.id, resource: visit.id, action: "attention.close" } })).toBe(1);
   });
 
   it("no cancela un pedido con pagos registrados", async () => {
