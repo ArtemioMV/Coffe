@@ -96,7 +96,7 @@ export function Menu({ tableToken }: { tableToken: string }) {
       : categories.find(c => c.id === selected)?.name ?? "Carta";
 
   return (
-    <div className="page-shell">
+    <div className="page-shell carta-page">
       <header className="page-heading">
         <h1>Nuestra carta</h1>
       </header>

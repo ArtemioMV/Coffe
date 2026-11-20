@@ -1,7 +1,7 @@
 "use client";
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { QrCode, ShoppingBag } from "lucide-react";
+import { QrCode, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@restaurant/ui";
 import { money, cents } from "@restaurant/contracts";
 import type { CartItem } from "./use-cart";
@@ -34,7 +34,7 @@ export function OrderPanel({
   const [reviewing, setReviewing] = useState(false);
 
   return (
-    <aside className="order-panel" id="pedido-panel" aria-label="Tu pedido">
+    <aside className="order-panel" id="pedido-panel" aria-label="Tu pedido" tabIndex={-1}>
       <div className="order-panel-head">
         <h2>Tu pedido</h2>
         {count > 0 && (
@@ -88,7 +88,6 @@ export function OrderPanel({
           )}
         </>
       )}
-
     </aside>
   );
 }
@@ -113,6 +112,19 @@ function OrderLine({
       <div className="order-line-top">
         <strong>{name}</strong>
         <span>{money((cents(item.product.price) * item.quantity) / 100)}</span>
+        <button
+          type="button"
+          className="order-remove"
+          aria-label={`Retirar ${name} del pedido`}
+          title="Retirar del pedido"
+          disabled={busy}
+          onClick={event => {
+            if (event.detail === 0) event.currentTarget.closest<HTMLElement>(".order-panel")?.focus({ preventScroll: true });
+            onChange(item.productId, -item.quantity);
+          }}
+        >
+          <Trash2 aria-hidden />
+        </button>
       </div>
       <div className="order-line-actions">
         <QuantityStepper
