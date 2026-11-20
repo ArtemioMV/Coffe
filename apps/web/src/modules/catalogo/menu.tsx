@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { QrCode, Search, Sparkles, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Button } from "@restaurant/ui";
 import { api, mutation, type Category } from "@/lib/client";
 import { useCart } from "./use-cart";
@@ -98,12 +98,10 @@ export function Menu({ tableToken }: { tableToken: string }) {
   return (
     <div className="page-shell">
       <header className="page-heading">
-        <span className="eyebrow">HECHO PARA COMPARTIR · LA POSADA CAJAMARQUINA</span>
         <h1>Nuestra carta</h1>
-        <p>Sabores de casa, preparados al momento con ingredientes frescos del valle.</p>
       </header>
 
-      {table ? (
+      {table && (
         <div className={table.open ? "table-banner" : "info-banner"}>
           <strong>Mesa {table.name} · {table.zone}</strong>
           <span>
@@ -118,20 +116,6 @@ export function Menu({ tableToken }: { tableToken: string }) {
               <Link href={`/panel?vista=tables&mesa=${table.id}`}>Volver a mis mesas</Link>
             </Button>
           )}
-        </div>
-      ) : (
-        <div className="info-banner exploration-banner">
-          <div>
-            <strong>Estás explorando la carta digital</strong>
-            <p>
-              Revisa nuestros platos y precios. Para realizar tu pedido y enviarlo a cocina, escanea el código QR ubicado en tu mesa.
-            </p>
-          </div>
-          <Button asChild variant="outline">
-            <Link href="/#como-pedir">
-              <QrCode size={14} aria-hidden /> ¿Cómo pedir con QR?
-            </Link>
-          </Button>
         </div>
       )}
 
@@ -168,14 +152,7 @@ export function Menu({ tableToken }: { tableToken: string }) {
             )}
           </label>
 
-          <div className="carta-list-head">
-            <h2 id="carta-seccion">{heading}</h2>
-            {!loading && (
-              <span>
-                {shown} {shown === 1 ? "opción" : "opciones"}
-              </span>
-            )}
-          </div>
+          <h2 id="carta-seccion" className="carta-list-head">{heading}</h2>
 
           {loading && <p className="empty-state">Cargando la carta…</p>}
           {!loading && !products.length && (
@@ -196,9 +173,9 @@ export function Menu({ tableToken }: { tableToken: string }) {
                 <ProductRow
                   key={p.id}
                   product={p}
-                  quantity={cart.quantityOf(p.id)}
+                  added={cart.quantityOf(p.id) > 0}
                   disabled={busy}
-                  onChange={delta => cart.change(p.id, delta)}
+                  onAdd={() => cart.change(p.id, 1)}
                 />
               ))}
             </div>
@@ -211,13 +188,11 @@ export function Menu({ tableToken }: { tableToken: string }) {
           total={cart.total}
           busy={busy}
           hasTable={Boolean(table)}
-          staff={staff}
           canOrder={Boolean(table?.open)}
           onChange={cart.change}
           onNote={cart.setNote}
           checkout={
             <CheckoutForm
-              tableName={table?.name ?? ""}
               staff={staff}
               busy={busy}
               onSubmit={data => void send(data)}

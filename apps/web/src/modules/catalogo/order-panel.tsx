@@ -1,7 +1,7 @@
 "use client";
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { QrCode, ShoppingBag, Sparkles } from "lucide-react";
+import { QrCode, ShoppingBag } from "lucide-react";
 import { Button } from "@restaurant/ui";
 import { money, cents } from "@restaurant/contracts";
 import type { CartItem } from "./use-cart";
@@ -14,8 +14,6 @@ type Props = {
   busy: boolean;
   canOrder: boolean;
   hasTable: boolean;
-  /** El mozo de la mesa toma el pedido: no hay paso de confirmación, va directo a cocina. */
-  staff?: boolean;
   onChange: (productId: string, delta: number) => void;
   onNote: (productId: string, notes: string) => void;
   checkout: ReactNode;
@@ -29,7 +27,6 @@ export function OrderPanel({
   busy,
   canOrder,
   hasTable,
-  staff = false,
   onChange,
   onNote,
   checkout
@@ -41,7 +38,7 @@ export function OrderPanel({
       <div className="order-panel-head">
         <h2>Tu pedido</h2>
         {count > 0 && (
-          <span className="badge" style={{ background: "var(--gold-light)", color: "var(--gold-deep)", fontWeight: 700 }}>
+          <span className="order-count">
             {count} {count === 1 ? "plato" : "platos"}
           </span>
         )}
@@ -51,9 +48,6 @@ export function OrderPanel({
         <div className="order-empty">
           <ShoppingBag aria-hidden />
           <p>Aún no agregas platos.</p>
-          <small style={{ color: "var(--muted)", display: "block", marginTop: "0.25rem" }}>
-            Elige tus platos favoritos de la carta para calcular tu cuenta.
-          </small>
         </div>
       ) : (
         <>
@@ -74,42 +68,27 @@ export function OrderPanel({
             <strong>{money(total)}</strong>
           </div>
 
-          {hasTable ? (
-            reviewing && canOrder ? (
+          {canOrder && (
+            reviewing ? (
               checkout
             ) : (
               <Button
                 className="full-width button-primary"
-                disabled={!canOrder || busy}
+                disabled={busy}
                 onClick={() => setReviewing(true)}
               >
                 Revisar pedido
               </Button>
             )
-          ) : (
-            <div style={{ marginTop: "0.8rem" }}>
-              <Button asChild variant="outline" className="full-width">
-                <Link href="/#como-pedir">
-                  <QrCode size={16} aria-hidden /> Escanear QR en mesa para pedir
-                </Link>
-              </Button>
-            </div>
+          )}
+          {!hasTable && (
+            <Link className="site-text-link order-qr-link" href="/#como-pedir">
+              <QrCode aria-hidden /> Escanea el QR de tu mesa para pedir
+            </Link>
           )}
         </>
       )}
 
-      <p className="small-note" style={{ borderTop: "1px solid var(--line)", paddingTop: "0.6rem", marginTop: "0.8rem" }}>
-        {hasTable ? (
-          staff
-            ? "Estás tomando el pedido de la mesa: al enviarlo llega directo a cocina."
-            : "Tu mozo confirmará el pedido antes de enviarlo a cocina."
-        ) : (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-            <Sparkles size={14} color="var(--gold-deep)" aria-hidden />
-            Para pedir en el restaurante, escanea el QR de tu mesa.
-          </span>
-        )}
-      </p>
     </aside>
   );
 }

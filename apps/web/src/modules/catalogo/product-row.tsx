@@ -3,21 +3,19 @@ import { Plus, UtensilsCrossed, Wine } from "lucide-react";
 import { Button } from "@restaurant/ui";
 import { money } from "@restaurant/contracts";
 import type { Product } from "@/lib/client";
-import { QuantityStepper } from "./quantity-stepper";
 
 type Props = {
   product: Product;
-  quantity: number;
+  added: boolean;
   disabled?: boolean;
-  onChange: (delta: number) => void;
+  onAdd: () => void;
 };
 
-/** Fila de plato: nombre, icono de estación y descripción a la izquierda; precio y botón Agregar (o cantidad) a la derecha. */
-export function ProductRow({ product, quantity, disabled, onChange }: Props) {
+export function ProductRow({ product, added, disabled, onAdd }: Props) {
   const isBar = product.station === "BAR";
 
   return (
-    <article className={quantity ? "product-row selected" : "product-row"}>
+    <article className="product-row" tabIndex={-1}>
       <div className="product-info">
         <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", marginBottom: "0.2rem" }}>
           {isBar ? (
@@ -38,18 +36,14 @@ export function ProductRow({ product, quantity, disabled, onChange }: Props) {
         <strong>{money(product.price)}</strong>
         {!product.available ? (
           <span className="badge">Agotado</span>
-        ) : quantity ? (
-          <QuantityStepper
-            name={product.name}
-            quantity={quantity}
-            disabled={disabled}
-            onChange={onChange}
-          />
-        ) : (
+        ) : !added && (
           <Button
             variant="outline"
             disabled={disabled}
-            onClick={() => onChange(1)}
+            onClick={event => {
+              event.currentTarget.closest("article")?.focus({ preventScroll: true });
+              onAdd();
+            }}
             aria-label={`Agregar ${product.name}`}
           >
             <Plus aria-hidden /> Agregar

@@ -2,10 +2,10 @@
 import { useState } from "react";
 import { Button } from "@restaurant/ui";
 
-type Props = { tableName: string; staff?: boolean; busy: boolean; onSubmit: (data: { guestName: string; notes: string }) => void; onEdit: () => void };
+type Props = { staff?: boolean; busy: boolean; onSubmit: (data: { guestName: string; notes: string }) => void; onEdit: () => void };
 
 /** Último paso antes de enviar: nombre opcional y observaciones para la mesa. */
-export function CheckoutForm({ tableName, staff = false, busy, onSubmit, onEdit }: Props) {
+export function CheckoutForm({ staff = false, busy, onSubmit, onEdit }: Props) {
   const [guestName, setGuestName] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -43,10 +43,6 @@ export function CheckoutForm({ tableName, staff = false, busy, onSubmit, onEdit 
           }}
         />
       </label>
-      <p className="small-note">
-        {staff ? "Se enviará a cocina como pedido de la mesa " : "Se enviará al mozo de la mesa "}
-        <strong>{tableName}</strong>.
-      </p>
       <Button className="full-width" disabled={busy}>
         {busy ? "Enviando…" : staff ? "Enviar a cocina" : "Enviar al mozo"}
       </Button>
