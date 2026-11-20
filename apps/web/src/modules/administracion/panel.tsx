@@ -21,7 +21,6 @@ import {
   Check,
   AlertTriangle,
   Clock,
-  Search,
   Share2
 } from "lucide-react";
 import { Button } from "@restaurant/ui";
@@ -311,7 +310,7 @@ export function Panel({ initialUser, initialTab, initialTableId }: PanelProps = 
         <div className="workspace-top">
           <div>
             <span className="eyebrow">OPERACIÓN DEL RESTAURANTE</span>
-            <h1>{tabLabels[activeTab]}</h1>
+            <h1>{user.role === "KITCHEN" && activeTab === "orders" ? "Resumen de cocina" : tabLabels[activeTab]}</h1>
             <span className="connection" aria-live="polite">
               <span style={{ width: "8px", height: "8px", display: "inline-block" }} />
               {dataStatus === "unavailable" ? "Datos sin actualizar" : connection}
@@ -466,7 +465,6 @@ function Access({ onUser, initialError }: { onUser: (user: User) => void; initia
 
 function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; run: Run; busy: boolean }) {
   const [filter, setFilter] = useState(user.role === "CASHIER" ? "unpaid" : "active");
-  const [search, setSearch] = useState("");
   const kitchenView = user.role === "KITCHEN";
 
   async function action(order: Order, value: string) {
@@ -527,9 +525,7 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
   }
 
   const visible = orders.filter(
-    o => kitchenView
-      ? `${o.accountNumber} ${o.number} mesa ${o.tableName}`.toLocaleLowerCase("es").includes(search.trim().replace(/^#/, "").toLocaleLowerCase("es"))
-      : filter === "all" ||
+    o => filter === "all" ||
       (filter === "unpaid" && BILLABLE.includes(o.status) && cents(o.total) > cents(o.paid)) ||
       filter === o.status ||
       (filter === "active" && !["DELIVERED", "CANCELLED", "REJECTED"].includes(o.status))
@@ -666,16 +662,7 @@ function OrdersView({ orders, user, run, busy }: { orders: Order[]; user: User; 
     );
   }
 
-  if (kitchenView) return (
-    <>
-      <label className="search-field kitchen-search">
-        <Search size={18} aria-hidden />
-        <span className="sr-only">Buscar pedido por número o mesa</span>
-        <input type="search" placeholder="Buscar pedido por número o mesa" value={search} onChange={e => setSearch(e.target.value)} />
-      </label>
-      <KitchenBoard orders={visible} renderOrder={renderCommand} />
-    </>
-  );
+  if (kitchenView) return <KitchenBoard orders={orders} renderOrder={renderCommand} />;
 
   return (
     <>

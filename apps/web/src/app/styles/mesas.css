@@ -56,9 +56,9 @@
 .mesa-orders li { display: flex; justify-content: space-between; gap: .6rem; }
 .mesa-orders li span:last-child { flex: none; }
 .mesa-orders p { margin-bottom: 0; }
-.mesa-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; margin-top: .9rem; }
+.mesa-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .9rem; }
 .button.capsule { border-radius: 999px; }
-.capsule-full { grid-column: 1 / -1; }
+.mesa-close-note { flex-basis: 100%; margin: .15rem 0 0; }
 .mesa-qr { margin-top: 1rem; padding-top: .85rem; border-top: 1px solid var(--line); }
 .mesa-qr img { max-width: 100%; height: auto; }
 .qr-actions { justify-content: center; }

@@ -144,14 +144,14 @@ function TableActions({ table, user, run, busy, onQr, resolved }: {
           </Button>
         )}
         {canServe && attention && own && (
-          <Button asChild className="capsule capsule-full">
+          <Button asChild className="capsule">
             <Link href={`/carta?mesa=${table.qrToken}`}>Tomar pedido</Link>
           </Button>
         )}
         {attention && ["ADMIN", "CASHIER"].includes(user.role) && (
-          resolved ? <Button variant="outline" className="capsule" disabled={busy} onClick={() => void run(() => mutation(`tables/${table.id}/close`, { attentionId: attention.id }))}>
+          resolved && <Button variant="outline" className="capsule" disabled={busy} onClick={() => void run(() => mutation(`tables/${table.id}/close`, { attentionId: attention.id }))}>
             Cerrar atención
-          </Button> : <span className="small-note">Cierre pendiente de entrega o pago</span>
+          </Button>
         )}
         {canServe && (
           <Button variant="outline" className="capsule" onClick={onQr}>Ver QR</Button>
@@ -178,6 +178,7 @@ function TableActions({ table, user, run, busy, onQr, resolved }: {
             </Button>
           </>
         )}
+        {attention && !resolved && ["ADMIN", "CASHIER"].includes(user.role) && <p className="mesa-close-note small-note">Cierre pendiente de entrega o pago</p>}
       </div>
   );
 }

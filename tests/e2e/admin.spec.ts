@@ -51,6 +51,13 @@ test("panel administra carta, QR e insumos con consumo y devolución", async ({ 
   const confirmed = await admin.post(`/api/v1/orders/${order.id}/transition`, { data: { action: "confirm", version: 0 } });
   expect(confirmed.status()).toBe(200);
   expect(Number(await stock())).toBe(1);
+  await page.goto(`/panel?vista=tables&mesa=${table.id}`);
+  await expect(page.getByText("Cierre pendiente de entrega o pago")).toBeVisible();
+  const qrButton = page.getByRole("button", { name: "Ver QR", exact: true });
+  await expect(qrButton).toHaveCSS("height", "32px");
+  const takeOrder = page.getByRole("link", { name: "Tomar pedido", exact: true });
+  expect((await takeOrder.boundingBox())!.width).toBeLessThan(150);
+
   expect((await admin.post(`/api/v1/orders/${order.id}/transition`, { data: { action: "confirm", version: 0 } })).status()).toBe(409);
   expect(Number(await stock())).toBe(1);
   const cancelled = await admin.post(`/api/v1/orders/${order.id}/transition`, { data: { action: "cancel", version: 1, reason: "Cancelación antes de cocinar" } });

@@ -98,7 +98,10 @@ export async function createOrder(input: unknown, key: string | null, customerId
   });
 }
 export async function listPanelOrders(actor: Actor) {
-  const where: Prisma.OrderWhereInput = actor.role === "CUSTOMER" ? { customerId: actor.id } : actor.role === "WAITER" ? { attention: { waiterId: actor.id } } : actor.role === "KITCHEN" ? { status: { in: ["PENDING", "PREPARING", "READY"] } } : {};
+  const where: Prisma.OrderWhereInput = actor.role === "CUSTOMER" ? { customerId: actor.id } : actor.role === "WAITER" ? { attention: { waiterId: actor.id } } : actor.role === "KITCHEN" ? { OR: [
+    { status: { in: ["PENDING", "PREPARING", "READY"] } },
+    { status: "DELIVERED", attention: { closedAt: null } }
+  ] } : {};
   // Una atención abierta debe seguir visible aunque haya cien comandas posteriores.
   const staffHistory = ["ADMIN", "WAITER", "CASHIER"].includes(actor.role);
   let scope = where;

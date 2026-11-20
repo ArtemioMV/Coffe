@@ -41,7 +41,7 @@ Tokens compartidos de color, espacio, tipo, radios y foco sobre Tailwind/shadcn/
 | Carrito/confirmación | Resumen, modalidad, datos necesarios, observaciones, total y confirmación única |
 | Seguimiento | Estados, fecha, detalle y ayuda |
 | Mesero | Cuadrícula por zona y detalle de la mesa seleccionada con pedidos, saldo y acciones |
-| Cocina/barra | Columnas de nuevos, en preparación y listos con búsqueda por pedido o mesa |
+| Cocina/barra | Resumen de comandas activas y mesas, búsqueda por pedido o mesa y cuatro columnas: nuevos, en preparación, listos y entregados. Las entregas de mesas abiertas siguen visibles hasta el cierre de la atención. |
 | Caja/admin | Filtros, montos alineados, acciones claras y auditoría |
 | Libro | Acceso visible, formulario comprensible, constancia y seguimiento privado |
 | Sugerencias/valoración | Flujos separados, lenguaje cercano y confirmación |

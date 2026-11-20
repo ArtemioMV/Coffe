@@ -49,6 +49,10 @@ test("QR, aprobación del mozo, cocina, ticket, pago y cierre", async ({ page, b
         const card = lane.locator("article").filter({ has: kitchenPage.getByRole("heading", { name: `Pedido #${order.number}` }) });
         await expect(card.getByRole("button", { name: "Iniciar preparación" })).toBeVisible();
         await kitchenPage.screenshot({ path: ".cache/cocina-desktop.png", fullPage: true });
+        await expect(kitchenPage.getByRole("region", { name: "Entregados", exact: true })).toBeVisible();
+        await kitchenPage.setViewportSize({ width: 390, height: 844 });
+        expect(await kitchenPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
       } finally {
         await kitchenPage.context().close();
       }
@@ -61,6 +65,8 @@ test("QR, aprobación del mozo, cocina, ticket, pago y cierre", async ({ page, b
   await expect(cashierPage.getByRole("combobox", { name: "Mostrar", exact: true })).toHaveValue("unpaid");
   const unpaidOrder = cashierPage.getByRole("article").filter({ has: cashierPage.getByRole("heading", { name: `Pedido #${order.number}`, exact: true }) });
   await expect(unpaidOrder.getByRole("button", { name: "Registrar cobro conciliado" })).toBeVisible();
+  const kitchenOrders = async () => (await (await staff.kitchen.get("/api/v1/orders")).json()).orders as {id: string; status: string}[];
+  expect(await kitchenOrders()).toEqual(expect.arrayContaining([expect.objectContaining({ id: orderId, status: "DELIVERED" })]));
   const paymentKey = crypto.randomUUID();
   const paymentData = { amount: order.total, method: "EFECTIVO", reference: "" };
   const paid = await staff.cashier.post(`/api/v1/orders/${orderId}/payments`, { data: paymentData, headers: { "Idempotency-Key": paymentKey } });
@@ -73,6 +79,7 @@ test("QR, aprobación del mozo, cocina, ticket, pago y cierre", async ({ page, b
   await cashierPage.getByText("Últimas atenciones cerradas", { exact: true }).click();
   await expect(cashierPage.locator("#mesa-detalle details li").first()).toContainText("Mozo");
   await cashierPage.context().close();
+  expect((await kitchenOrders()).some(o => o.id === orderId)).toBe(false);
   expect((await staff.admin.patch(`/api/v1/tables/${table.id}`, { data: { active: false } })).status()).toBe(200);
   const ticket = await (await staff.cashier.get(`/api/v1/orders/${orderId}/ticket`)).json();
   expect(ticket.fiscal.enabled).toBe(false);
