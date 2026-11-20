@@ -4,6 +4,7 @@ test("Administración publica los enlaces sociales y la portada muestra los camb
   const guest = await request.put("/api/v1/admin/social", { headers: { Origin: baseURL! }, data: {} });
   expect(guest.status()).toBe(401);
 
+  await page.route(/^https:\/\/(?:www\.)?(?:facebook|instagram|tiktok)\.com\//, route => route.fulfill({ body: "Vista previa de prueba" }));
   await page.goto("/");
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
@@ -16,7 +17,11 @@ test("Administración publica los enlaces sociales y la portada muestra los camb
   await expect(menuLink).toHaveCSS("border-top-width", "0px");
   await expect(page.getByRole("link", { name: "Ver reseña compartida en Google Maps" })).toHaveAttribute("href", "https://maps.app.goo.gl/8pwp6QwgMfCp68Bq9");
   const social = page.getByRole("region", { name: "Visita nuestras redes" });
-  await expect(social.getByRole("link", { name: "Instagram" })).toHaveAttribute("href", "https://www.instagram.com/posadacajamarquina/");
+  await expect(social.getByRole("link", { name: "Instagram", exact: true })).toHaveAttribute("href", "https://www.instagram.com/posadacajamarquina/");
+  await expect(social.getByTitle("Publicaciones de Facebook")).toHaveAttribute("src", /^https:\/\/www\.facebook\.com\/plugins\/page\.php\?.*tabs=timeline/);
+  await expect(social.getByTitle("Perfil de TikTok")).toHaveAttribute("src", "https://www.tiktok.com/embed/@posadacajamarquina");
+  await expect(social.getByTitle("Publicación de Instagram")).toHaveAttribute("loading", "lazy");
+  await expect(social.getByRole("button", { name: /^Cargar/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Waze" })).toHaveAttribute("href", /ll=-8\.1426352%2C-79\.058001/);
   await page.getByRole("button", { name: /Ir a la diapositiva 2/ }).click();
   await expect(page.getByRole("button", { name: /Ir a la diapositiva 2/ })).toHaveAttribute("aria-current", "true");
@@ -47,12 +52,8 @@ test("Administración publica los enlaces sociales y la portada muestra los camb
   expect(stale.status()).toBe(409);
 
   await page.goto("/");
-  await expect(social.getByRole("link", { name: "Instagram" })).toHaveCount(0);
-  await page.route("https://www.tiktok.com/player/**", route => route.fulfill({ body: "Reproductor de prueba" }));
-  await expect(social.locator("iframe")).toHaveCount(0);
-  await social.getByRole("button", { name: "Cargar video de TikTok" }).click();
-  await expect(social.locator("iframe")).toHaveAttribute("src", "https://www.tiktok.com/player/v1/1234567890123456789");
-  await page.route("https://www.instagram.com/**/embed/", route => route.fulfill({ body: "Publicación de prueba" }));
-  await social.getByRole("button", { name: "Cargar publicación de Instagram" }).click();
-  await expect(social.getByTitle("publicación de Instagram")).toHaveAttribute("src", "https://www.instagram.com/reel/DJu4_fpSaXW/embed/");
+  await expect(social.getByRole("link", { name: "Instagram", exact: true })).toHaveCount(0);
+  await expect(social.getByTitle("Video de TikTok")).toHaveAttribute("src", "https://www.tiktok.com/player/v1/1234567890123456789");
+  await expect(social.getByTitle("Perfil de TikTok")).toHaveCount(0);
+  await expect(social.getByTitle("Publicación de Instagram")).toHaveAttribute("src", "https://www.instagram.com/reel/DJu4_fpSaXW/embed/");
 });

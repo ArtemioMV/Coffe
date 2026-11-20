@@ -61,7 +61,7 @@ La ficha oficial de la Posada en Víctor Larco Herrera ya viene configurada. Par
 
 Las reseñas se consultan al pulsar «Cargar reseñas de Google Maps». La respuesta no se guarda en la base, en Redis ni en la caché HTTP. Sin configurar Places API, la sección enlaza a la ficha oficial en Google Maps y al formulario de sugerencias.
 
-La migración `202611190003_site_social` instala las redes oficiales de la Posada. Desde **Administración → Redes sociales** se pueden editar los tres perfiles, la publicación de Instagram y el video de TikTok. Un campo vacío lo oculta de la portada. Las publicaciones deben ser públicas y se cargan al pulsar su botón. TikTok recibe el enlace completo del video, con `/@usuario/video/…`.
+La migración `202611190003_site_social` instala las redes oficiales de la Posada. Desde **Administración → Redes sociales** se pueden editar los tres perfiles, la publicación de Instagram y el video de TikTok. La portada carga automáticamente la publicación pública de Instagram, la cronología pública de Facebook y el perfil de TikTok al acercarse a la sección. Si se configura un enlace completo de video de TikTok (`/@usuario/video/…`), este ocupa el lugar del perfil. Dejar un campo vacío oculta ese enlace o publicación.
 
 ## Comandos
 

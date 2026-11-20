@@ -54,7 +54,7 @@ export function AdminSocial({ busy, onError, run }: {
   return (
     <section className="surface">
       <h2>Perfiles y publicaciones de portada</h2>
-      <p>Pega enlaces públicos completos. Deja un campo vacío para ocultarlo de la portada.</p>
+      <p>Pega enlaces públicos completos. Si dejas vacío el video de TikTok, se muestra el perfil.</p>
       <form className="form-grid" onSubmit={save} onChange={() => setSaved(false)} key={settings.version}>
         {fields.map(([key, label]) => (
           <label key={key}>

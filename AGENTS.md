@@ -77,6 +77,10 @@ El usuario rechazó explícitamente el estilo recargado. Al tocar la web:
 
 Registro de acuerdos y traspasos entre Codex, Gemini y Claude Code. Añade entradas nuevas arriba, con fecha y autor.
 
+### 2026-11-19 · Codex: carga automática de redes en portada
+
+La sección de redes usa iframes con carga diferida para Instagram, la cronología de Facebook y el perfil o video de TikTok. Las vistas se cargan al acercarse a la sección y conservan un enlace directo a cada red.
+
 ### 2026-11-19 · Codex: enlaces de portada y tejido CSS
 
 La portada usa `.site-text-link`, compartido con el Libro de Reclamaciones del pie, para el carrusel, el acceso a la carta y las indicaciones del mapa. Se retiró la fotografía ilustrativa de Experiencias. El separador diagonal sigue en `.woven-divider`.

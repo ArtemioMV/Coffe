@@ -28,11 +28,22 @@ export function parseSocialUrl(key: keyof SocialLinks, value: string) {
   return `https://${hosts[1]}${pathname}`;
 }
 
-export function socialEmbed(key: "instagramPost" | "tiktokVideo", value: string) {
+export function socialEmbed(key: Exclude<keyof SocialLinks, "instagram">, value: string) {
   const source = parseSocialUrl(key, value);
   if (!source) return null;
 
   const { pathname } = new URL(source);
+  if (key === "facebook") {
+    const query = new URLSearchParams({
+      href: source,
+      tabs: "timeline",
+      width: "280",
+      height: "540",
+      show_facepile: "false"
+    });
+    return `https://www.facebook.com/plugins/page.php?${query}`;
+  }
   if (key === "instagramPost") return `https://www.instagram.com${pathname.replace(/\/$/, "")}/embed/`;
+  if (key === "tiktok") return `https://www.tiktok.com/embed${pathname.replace(/\/$/, "")}`;
   return `https://www.tiktok.com/player/v1/${tiktokVideoPath.exec(pathname)![1]}`;
 }

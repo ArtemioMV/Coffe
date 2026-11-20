@@ -1,27 +1,23 @@
-"use client";
-
-import { useState } from "react";
 import { ExternalLink } from "lucide-react";
-import { Button } from "@restaurant/ui";
 
-export function SocialPreview({ label, src, href }: { label: string; src: string; href: string }) {
-  const [open, setOpen] = useState(false);
-
+export function SocialPreview({ title, network, src, href }: {
+  title: string;
+  network: string;
+  src: string;
+  href: string;
+}) {
   return (
     <article className="social-preview">
-      {open ? (
-        <iframe
-          className="social-frame"
-          title={label}
-          src={src}
-          allow="fullscreen; encrypted-media"
-          sandbox="allow-scripts allow-same-origin"
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
-      ) : (
-        <Button type="button" variant="outline" onClick={() => setOpen(true)}>Cargar {label}</Button>
-      )}
-      <a className="review-link" href={href}>Abrir publicación <ExternalLink size={14} aria-hidden /></a>
+      <iframe
+        className="social-frame"
+        title={title}
+        src={src}
+        loading="lazy"
+        allow="fullscreen; encrypted-media"
+        sandbox="allow-scripts allow-same-origin"
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+      <a className="site-text-link" href={href}>Ver en {network} <ExternalLink aria-hidden /></a>
     </article>
   );
 }
